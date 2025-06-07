@@ -256,6 +256,57 @@ select {
   }
 }
 
+/* Restaurant Detail View */
+#restaurant-view {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+#restaurant-cover {
+  width: 100%;
+  max-height: 250px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+#restaurant-name {
+  font-size: 2rem;
+  margin-bottom: 0.2rem;
+}
+
+#restaurant-cuisine {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+#restaurant-menu-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+/* Each Menu Item Card */
+.menu-item {
+  background-color: var(--card-bg);
+  border: 1px solid var(--highlight);
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.menu-item p {
+  margin-bottom: 0.5rem;
+}
+
+.menu-item button {
+  margin-top: auto;
+}
+
 .hidden {
   display: none;
 }
