@@ -6,7 +6,6 @@
   <title>SmartMeal</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* Minimal toast styling if not in CSS */
     .toast {
       position: fixed;
       bottom: 20px;
@@ -22,6 +21,9 @@
     }
     .toast.show {
       opacity: 1;
+    }
+    .hidden {
+      display: none;
     }
   </style>
 </head>
@@ -47,7 +49,7 @@
     <section id="restaurant-view" class="hidden">
       <button onclick="showHome()">← Back to Restaurants</button>
       <div id="restaurant-details">
-        <img id="restaurant-cover" alt="Restaurant Cover" />
+        <img id="restaurant-cover" alt="Restaurant Cover" style="max-width: 100%; border-radius: 8px;" />
         <h2 id="restaurant-name"></h2>
         <p id="restaurant-cuisine"></p>
         <h3>Menu</h3>
@@ -61,7 +63,7 @@
       <input type="text" id="res-name" placeholder="Restaurant Name" /><br />
       <input type="text" id="res-cuisine" placeholder="Cuisine" /><br />
       <input type="text" id="res-menu" placeholder="Menu (comma-separated)" /><br />
-      <label for="res-image-file" style="margin-top: 1rem;">Cover Image</label>
+      <label for="res-image-file">Cover Image</label>
       <input type="file" id="res-image-file" accept="image/*" />
       <img id="image-preview" src="" alt="Image Preview" style="margin-top: 1rem; max-width: 100%; border-radius: 8px; display: none;" />
       <button onclick="addRestaurant()">Add Restaurant</button>
