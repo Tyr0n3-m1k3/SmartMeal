@@ -4,19 +4,19 @@ const defaultRestaurants = [
   {
     name: "Mama's Kitchen",
     cuisine: "African",
-    image: "assets/ugali.jpg",
+    image: "assets/ugali.png",
     menu: ["Ugali", "Sukuma Wiki", "Nyama Choma"]
   },
   {
     name: "Pizza Hub",
     cuisine: "Italian",
-    image: "assets/pizza.jpg",
+    image: "assets/pizza.png",
     menu: ["Margherita", "Pepperoni", "Veggie"]
   },
   {
     name: "Wok & Roll",
     cuisine: "Asian",
-    image: "assets/noodles.jpg",
+    image: "assets/noodles.png",
     menu: ["Noodles", "Fried Rice", "Spring Rolls"]
   }
 ];
