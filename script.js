@@ -33,11 +33,50 @@ const defaultRestaurants = [
   }
 ];
 
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.classList.remove("hidden");
-  setTimeout(() => toast.classList.add("hidden"), 3000);
+document.getElementById("menu-toggle")?.addEventListener("click", () => {
+  document.querySelector("nav").classList.toggle("show");
+});
+
+function loadRestaurants() {
+  const container = document.getElementById("restaurant-list");
+  container.innerHTML = "";
+  const savedRestaurants = JSON.parse(localStorage.getItem("restaurants") || "[]");
+  const restaurants = [...defaultRestaurants, ...savedRestaurants];
+  
+  restaurants.forEach(res => {
+    const div = document.createElement("div");
+    div.className = "restaurant";
+    div.innerHTML = `
+      <img src="${res.image}" alt="${res.name}" />
+      <h2>${res.name}</h2>
+      <p><strong>Cuisine:</strong> ${res.cuisine}</p>
+      <p><strong>Menu:</strong> ${res.menu.join(", ")}</p>
+      <button onclick="addToCart('${res.name}')">Order from ${res.name}</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function addToCart(name) {
+  cart.push(name);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  document.getElementById("cart-count").textContent = cart.length;
+  alert(name + " added to cart!");
+}
+
+function viewCart() {
+  const cartList = document.getElementById("cart-items");
+  cartList.innerHTML = "";
+  cart.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    cartList.appendChild(li);
+  });
+  document.getElementById("cart-modal").classList.remove("hidden");
+}
+
+function closeCart() {
+  document.getElementById("cart-modal").classList.add("hidden");
 }
 
 function showHome() {
@@ -62,7 +101,6 @@ function loginAdmin() {
   const username = document.getElementById("admin-username").value;
   const password = document.getElementById("admin-password").value;
   if (username === "admin" && password === "admin123") {
-    isAdmin = true;
     showAdminPanel();
   } else {
     document.getElementById("admin-error").textContent = "Invalid credentials.";
@@ -80,78 +118,7 @@ function addRestaurant() {
   localStorage.setItem("restaurants", JSON.stringify(stored));
 
   document.getElementById("admin-msg").textContent = "Restaurant added successfully!";
-  showToast("Restaurant added!");
-  loadRestaurants();
-  document.getElementById("res-name").value = "";
-  document.getElementById("res-cuisine").value = "";
-  document.getElementById("res-menu").value = "";
-  document.getElementById("res-image").value = "";
-}
-
-function loadRestaurants() {
-  const container = document.getElementById("restaurant-list");
-  container.innerHTML = "";
-  const savedRestaurants = JSON.parse(localStorage.getItem("restaurants") || "[]");
-  const restaurants = [...defaultRestaurants, ...savedRestaurants];
-
-  const searchQuery = document.getElementById("search-bar")?.value.toLowerCase() || "";
-
-  restaurants.filter(res =>
-    res.name.toLowerCase().includes(searchQuery) ||
-    res.cuisine.toLowerCase().includes(searchQuery)
-  ).forEach(res => {
-    const div = document.createElement("div");
-    div.className = "restaurant";
-    div.innerHTML = `
-      <img src="${res.image}" alt="${res.name}" />
-      <h2>${res.name}</h2>
-      <p><strong>Cuisine:</strong> ${res.cuisine}</p>
-      <p><strong>Menu:</strong> ${res.menu.join(", ")}</p>
-      <button onclick="addToCart('${res.name}')">Order from ${res.name}</button>
-    `;
-    container.appendChild(div);
-  });
-}
-
-function addToCart(name) {
-  cart.push(name);
-  localStorage.setItem("cart", JSON.stringify(cart));
-  document.getElementById("cart-count").textContent = cart.length;
-  showToast(`${name} added to cart!`);
-}
-
-function viewCart() {
-  const cartList = document.getElementById("cart-items");
-  cartList.innerHTML = "";
-  cart.forEach((item, index) => {
-    const li = document.createElement("li");
-    li.textContent = item;
-    const removeBtn = document.createElement("button");
-    removeBtn.textContent = "Remove";
-    removeBtn.onclick = () => removeFromCart(index);
-    li.appendChild(removeBtn);
-    cartList.appendChild(li);
-  });
-  document.getElementById("cart-modal").classList.remove("hidden");
-}
-
-function closeCart() {
-  document.getElementById("cart-modal").classList.add("hidden");
-}
-
-function removeFromCart(index) {
-  cart.splice(index, 1);
-  localStorage.setItem("cart", JSON.stringify(cart));
-  viewCart();
-  document.getElementById("cart-count").textContent = cart.length;
-}
-
-function placeOrder() {
-  cart = [];
-  localStorage.setItem("cart", JSON.stringify(cart));
-  closeCart();
-  document.getElementById("cart-count").textContent = 0;
-  showToast("Order placed successfully!");
+  loadRestaurants(); // Refresh the restaurant list
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -159,9 +126,4 @@ document.addEventListener("DOMContentLoaded", () => {
     loadRestaurants();
     document.getElementById("cart-count").textContent = cart.length;
   }
-
-  document.getElementById("search-bar")?.addEventListener("input", loadRestaurants);
-  document.getElementById("menu-toggle")?.addEventListener("click", () => {
-    document.querySelector("nav").classList.toggle("show");
-  });
 });
