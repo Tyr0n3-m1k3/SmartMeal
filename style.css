@@ -107,7 +107,8 @@ footer {
   width: 300px;
 }
 
-input {
+input,
+select {
   padding: 0.5rem;
   margin-top: 0.5rem;
   background: var(--card-bg);
@@ -115,6 +116,7 @@ input {
   color: var(--text-light);
   border-radius: 5px;
   width: 100%;
+  appearance: none;
 }
 
 .mobile-nav-button {
@@ -169,7 +171,7 @@ input {
   background: darkred;
 }
 
-/* Make restaurant cards stack vertically on smaller screens */
+/* Responsive adjustments */
 @media (max-width: 600px) {
   nav {
     flex-direction: column;
@@ -196,7 +198,9 @@ input {
     padding: 1rem;
   }
 
-  input, button {
+  input,
+  select,
+  button {
     width: 100%;
     margin-top: 0.5rem;
   }
