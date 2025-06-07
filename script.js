@@ -75,6 +75,48 @@ function closeCart() {
   document.getElementById("cart-modal").classList.add("hidden");
 }
 
+function showHome() {
+  document.getElementById("home-view").classList.remove("hidden");
+  document.getElementById("admin-login").classList.add("hidden");
+  document.getElementById("admin-panel").classList.add("hidden");
+}
+
+function showLogin() {
+  document.getElementById("home-view").classList.add("hidden");
+  document.getElementById("admin-login").classList.remove("hidden");
+  document.getElementById("admin-panel").classList.add("hidden");
+}
+
+function showAdminPanel() {
+  document.getElementById("home-view").classList.add("hidden");
+  document.getElementById("admin-login").classList.add("hidden");
+  document.getElementById("admin-panel").classList.remove("hidden");
+}
+
+function loginAdmin() {
+  const username = document.getElementById("admin-username").value;
+  const password = document.getElementById("admin-password").value;
+  if (username === "admin" && password === "admin123") {
+    showAdminPanel();
+  } else {
+    document.getElementById("admin-error").textContent = "Invalid credentials.";
+  }
+}
+
+function addRestaurant() {
+  const name = document.getElementById("res-name").value;
+  const cuisine = document.getElementById("res-cuisine").value;
+  const menu = document.getElementById("res-menu").value.split(",");
+  const image = document.getElementById("res-image").value;
+
+  let stored = JSON.parse(localStorage.getItem("restaurants") || "[]");
+  stored.push({ name, cuisine, menu, image });
+  localStorage.setItem("restaurants", JSON.stringify(stored));
+
+  document.getElementById("admin-msg").textContent = "Restaurant added successfully!";
+  loadRestaurants(); // Refresh the restaurant list
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("restaurant-list")) {
     loadRestaurants();
