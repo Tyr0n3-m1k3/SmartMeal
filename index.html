@@ -24,29 +24,38 @@
       <div id="restaurant-list"></div>
     </section>
 
+    <!-- ✅ New: Restaurant Detail View -->
+    <section id="restaurant-view" class="hidden">
+      <button onclick="showHome()">← Back to Restaurants</button>
+      <div id="restaurant-details">
+        <img id="restaurant-cover" alt="Restaurant Cover" />
+        <h2 id="restaurant-name"></h2>
+        <p id="restaurant-cuisine"></p>
+        <h3>Menu</h3>
+        <div id="restaurant-menu-list"></div>
+      </div>
+    </section>
+
     <!-- Admin Panel View -->
-<section id="admin-panel" class="hidden">
-  <h2>Add / Edit Restaurant</h2>
-  <input type="text" id="res-name" placeholder="Restaurant Name" /><br />
-  <input type="text" id="res-cuisine" placeholder="Cuisine" /><br />
-  <input type="text" id="res-menu" placeholder="Menu (comma-separated)" /><br />
-
-  <!-- ✅ File input for image -->
-  <label for="res-image-file" style="margin-top: 1rem;">Cover Image</label>
-  <input type="file" id="res-image-file" accept="image/*" />
-
-  <!-- ✅ Preview image -->
-  <img id="image-preview" src="" alt="Image Preview" style="margin-top: 1rem; max-width: 100%; border-radius: 8px; display: none;" />
-
-  <button onclick="addRestaurant()">Add Restaurant</button>
-  <p id="admin-msg" style="color: green;"></p>
-</section>
+    <section id="admin-panel" class="hidden">
+      <h2>Add / Edit Restaurant</h2>
+      <input type="text" id="res-name" placeholder="Restaurant Name" /><br />
+      <input type="text" id="res-cuisine" placeholder="Cuisine" /><br />
+      <input type="text" id="res-menu" placeholder="Menu (comma-separated)" /><br />
+      <label for="res-image-file" style="margin-top: 1rem;">Cover Image</label>
+      <input type="file" id="res-image-file" accept="image/*" />
+      <img id="image-preview" src="" alt="Image Preview" style="margin-top: 1rem; max-width: 100%; border-radius: 8px; display: none;" />
+      <button onclick="addRestaurant()">Add Restaurant</button>
+      <p id="admin-msg" style="color: green;"></p>
+    </section>
+  </main>
 
   <!-- Cart Modal -->
   <div id="cart-modal" class="modal hidden">
     <div class="modal-content">
       <h2>Your Cart</h2>
       <ul id="cart-items"></ul>
+      <p><strong>Total:</strong> $<span id="cart-total">0</span></p>
       <button onclick="closeCart()">Close</button>
       <button onclick="placeOrder()">Place Order</button>
     </div>
