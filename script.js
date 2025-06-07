@@ -1,43 +1,67 @@
 let cart = JSON.parse(localStorage.getItem("cart") || "[]");
 let userRole = null; // "customer" or "owner"
-let selectedImageBase64 = ""; // For uploaded image
+let selectedImageBase64 = "";
 
 const defaultRestaurants = [
   {
     name: "Mama's Kitchen",
     cuisine: "African",
     image: "assets/ugali.png",
-    menu: ["Ugali", "Sukuma Wiki", "Nyama Choma"]
+    menu: [
+      { name: "Ugali", price: 200 },
+      { name: "Sukuma Wiki", price: 150 },
+      { name: "Nyama Choma", price: 300 }
+    ]
   },
   {
     name: "Pizza Hub",
     cuisine: "Italian",
     image: "assets/pizza.png",
-    menu: ["Margherita", "Pepperoni", "Veggie"]
+    menu: [
+      { name: "Margherita", price: 500 },
+      { name: "Pepperoni", price: 600 },
+      { name: "Veggie", price: 450 }
+    ]
   },
   {
     name: "Wok & Roll",
     cuisine: "Asian",
     image: "assets/noodles.png",
-    menu: ["Noodles", "Fried Rice", "Spring Rolls"]
+    menu: [
+      { name: "Noodles", price: 350 },
+      { name: "Fried Rice", price: 300 },
+      { name: "Spring Rolls", price: 250 }
+    ]
   },
   {
     name: "Burger Place",
     cuisine: "American",
     image: "assets/burger.png",
-    menu: ["Harmburger", "Cheeseburger", "Chicken Nuggets"]
+    menu: [
+      { name: "Hamburger", price: 400 },
+      { name: "Cheeseburger", price: 450 },
+      { name: "Chicken Nuggets", price: 300 }
+    ]
   },
   {
     name: "Shake Joint",
     cuisine: "Global",
     image: "assets/shake.png",
-    menu: ["Chocolate", "Strawberry", "Vanilla"]
+    menu: [
+      { name: "Chocolate", price: 200 },
+      { name: "Strawberry", price: 200 },
+      { name: "Vanilla", price: 180 }
+    ]
   },
   {
     name: "Sushi Palace",
-    cuisine: "Sea food",
+    cuisine: "Seafood",
     image: "assets/sushi.png",
-    menu: ["crab", "shrimp", "sushi"]
+    menu: [
+      { name: "Crab", price: 600 },
+      { name: "Shrimp", price: 650 },
+      { name: "Sushi", price: 700 }
+    ]
   }
 ];
 
@@ -79,6 +103,18 @@ function handleLogin() {
   loadRestaurants();
 }
 
+function showHome() {
+  document.getElementById("home-view").classList.remove("hidden");
+  document.getElementById("restaurant-view").classList.add("hidden");
+  document.getElementById("admin-panel").classList.add("hidden");
+}
+
+function showAdminPanel() {
+  document.getElementById("home-view").classList.add("hidden");
+  document.getElementById("restaurant-view").classList.add("hidden");
+  document.getElementById("admin-panel").classList.remove("hidden");
+}
+
 function loadRestaurants(filter = "") {
   const container = document.getElementById("restaurant-list");
   container.innerHTML = "";
@@ -93,12 +129,13 @@ function loadRestaurants(filter = "") {
     .forEach((res, index) => {
       const div = document.createElement("div");
       div.className = "restaurant";
+      const menuNames = res.menu.map(item => (typeof item === "string" ? item : item.name));
       div.innerHTML = `
         <img src="${res.image}" alt="${res.name}" />
         <h2>${res.name}</h2>
         <p><strong>Cuisine:</strong> ${res.cuisine}</p>
-        <p><strong>Menu:</strong> ${res.menu.join(", ")}</p>
-        <button onclick="addToCart('${res.name}')">Order from ${res.name}</button>
+        <p><strong>Menu:</strong> ${menuNames.join(", ")}</p>
+        <button onclick="viewRestaurant(${index})">Order from ${res.name}</button>
         ${
           userRole === "owner" && index >= defaultRestaurants.length
             ? `<button onclick="editRestaurant(${index})">Edit</button>
@@ -110,45 +147,88 @@ function loadRestaurants(filter = "") {
     });
 }
 
-function addToCart(name) {
-  cart.push(name);
+function viewRestaurant(index) {
+  const savedRestaurants = JSON.parse(localStorage.getItem("restaurants") || "[]");
+  const restaurants = [...defaultRestaurants, ...savedRestaurants];
+  const restaurant = restaurants[index];
+
+  const formattedMenu = restaurant.menu.map(item =>
+    typeof item === "string" ? { name: item, price: 100 } : item
+  );
+
+  document.getElementById("home-view").classList.add("hidden");
+  document.getElementById("admin-panel").classList.add("hidden");
+  document.getElementById("restaurant-view").classList.remove("hidden");
+
+  document.getElementById("restaurant-cover").src = restaurant.image;
+  document.getElementById("restaurant-name").textContent = restaurant.name;
+  document.getElementById("restaurant-cuisine").textContent = `Cuisine: ${restaurant.cuisine}`;
+
+  const menuList = document.getElementById("restaurant-menu-list");
+  menuList.innerHTML = "";
+
+  formattedMenu.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "menu-item";
+    div.innerHTML = `
+      <p><strong>${item.name}</strong> - $${item.price}</p>
+      <button onclick='addItemToCart(${JSON.stringify(JSON.stringify(item))})'>Add to Cart</button>
+    `;
+    menuList.appendChild(div);
+  });
+}
+
+function addItemToCart(itemJsonStr) {
+  const item = JSON.parse(JSON.parse(itemJsonStr));
+  cart.push(item);
   localStorage.setItem("cart", JSON.stringify(cart));
   document.getElementById("cart-count").textContent = cart.length;
-  showToast(`${name} added to cart`);
+  showToast(`${item.name} added to cart`);
 }
 
 function viewCart() {
   const cartList = document.getElementById("cart-items");
+  const totalElement = document.getElementById("cart-total");
   cartList.innerHTML = "";
 
-  const itemCount = {};
+  const itemMap = {};
   cart.forEach(item => {
-    itemCount[item] = (itemCount[item] || 0) + 1;
+    const key = item.name;
+    if (!itemMap[key]) {
+      itemMap[key] = { ...item, quantity: 0 };
+    }
+    itemMap[key].quantity += 1;
   });
 
-  Object.entries(itemCount).forEach(([item, count]) => {
+  let total = 0;
+
+  Object.values(itemMap).forEach(({ name, price, quantity }) => {
+    const subtotal = price * quantity;
+    total += subtotal;
+
     const li = document.createElement("li");
     li.innerHTML = `
-      ${item} x${count}
-      <button onclick="removeFromCart('${item}')">Remove</button>
+      ${name} x${quantity} - $${subtotal}
+      <button onclick="removeFromCartByName('${name}')">Remove</button>
     `;
     cartList.appendChild(li);
   });
 
+  totalElement.textContent = total.toFixed(2);
   document.getElementById("cart-modal").classList.remove("hidden");
 }
 
-function closeCart() {
-  document.getElementById("cart-modal").classList.add("hidden");
-}
-
-function removeFromCart(name) {
-  const index = cart.indexOf(name);
+function removeFromCartByName(name) {
+  const index = cart.findIndex(item => item.name === name);
   if (index !== -1) cart.splice(index, 1);
   localStorage.setItem("cart", JSON.stringify(cart));
   document.getElementById("cart-count").textContent = cart.length;
   viewCart();
   showToast(`${name} removed from cart`);
+}
+
+function closeCart() {
+  document.getElementById("cart-modal").classList.add("hidden");
 }
 
 function placeOrder() {
@@ -163,20 +243,13 @@ function placeOrder() {
   showToast("Order placed successfully!");
 }
 
-function showHome() {
-  document.getElementById("home-view").classList.remove("hidden");
-  document.getElementById("admin-panel").classList.add("hidden");
-}
-
-function showAdminPanel() {
-  document.getElementById("home-view").classList.add("hidden");
-  document.getElementById("admin-panel").classList.remove("hidden");
-}
-
 function addRestaurant() {
   const name = document.getElementById("res-name").value.trim();
   const cuisine = document.getElementById("res-cuisine").value.trim();
-  const menu = document.getElementById("res-menu").value.split(",").map(item => item.trim());
+  const menu = document.getElementById("res-menu").value.split(",").map(item => ({
+    name: item.trim(),
+    price: 100
+  }));
   const image = selectedImageBase64 || "assets/placeholder.png";
 
   if (!name || !cuisine || !menu.length || !image) {
@@ -226,7 +299,7 @@ function editRestaurant(index) {
 
   document.getElementById("res-name").value = res.name;
   document.getElementById("res-cuisine").value = res.cuisine;
-  document.getElementById("res-menu").value = res.menu.join(", ");
+  document.getElementById("res-menu").value = res.menu.map(m => m.name).join(", ");
   document.getElementById("image-preview").src = res.image;
   document.getElementById("image-preview").style.display = "block";
   selectedImageBase64 = res.image;
@@ -239,7 +312,10 @@ function editRestaurant(index) {
   oldButton.onclick = function () {
     const name = document.getElementById("res-name").value.trim();
     const cuisine = document.getElementById("res-cuisine").value.trim();
-    const menu = document.getElementById("res-menu").value.split(",").map(item => item.trim());
+    const menu = document.getElementById("res-menu").value.split(",").map(item => ({
+      name: item.trim(),
+      price: 100
+    }));
     const image = selectedImageBase64 || "assets/placeholder.png";
 
     const stored = JSON.parse(localStorage.getItem("restaurants") || "[]");
