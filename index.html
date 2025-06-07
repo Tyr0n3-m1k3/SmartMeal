@@ -9,48 +9,55 @@
 <body>
   <header>
     <h1>SmartMeal</h1>
-    <nav>
+    <button id="menu-toggle" class="mobile-nav-button">☰</button>
+    <nav id="main-nav">
       <a href="#" onclick="showHome()">Home</a>
-      <a href="#">Restaurants</a>
       <a href="#" onclick="viewCart()">Cart (<span id="cart-count">0</span>)</a>
       <a href="#" onclick="showLogin()">Admin</a>
     </nav>
-    <button id="menu-toggle" class="mobile-nav-button">☰</button>
   </header>
 
   <main>
-  <!-- Home View -->
-  <section id="home-view">
-    <div id="restaurant-list"></div>
-  </section>
+    <!-- Home View -->
+    <section id="home-view">
+      <input type="search" id="search-bar" placeholder="Search restaurants or cuisine..." />
+      <div id="restaurant-list"></div>
+    </section>
 
-  <!-- Admin Login -->
-  <section id="admin-login" class="hidden">
-    <h2>Admin Login</h2>
-    <input type="text" id="admin-username" placeholder="Username">
-    <input type="password" id="admin-password" placeholder="Password">
-    <button onclick="loginAdmin()">Login</button>
-    <p id="admin-error" style="color: red;"></p>
-  </section>
+    <!-- Admin Login View -->
+    <section id="admin-login" class="hidden">
+      <h2>Admin Login</h2>
+      <input type="text" id="admin-username" placeholder="Username" />
+      <input type="password" id="admin-password" placeholder="Password" />
+      <button onclick="loginAdmin()">Login</button>
+      <p id="admin-error" style="color: red;"></p>
+    </section>
 
-  <!-- Admin Panel -->
-  <section id="admin-panel" class="hidden">
-    <h2>Add New Restaurant</h2>
-    <input type="text" id="res-name" placeholder="Restaurant Name"><br>
-    <input type="text" id="res-cuisine" placeholder="Cuisine"><br>
-    <input type="text" id="res-menu" placeholder="Menu (comma-separated)"><br>
-    <input type="text" id="res-image" placeholder="Image URL"><br>
-    <button onclick="addRestaurant()">Add Restaurant</button>
-    <p id="admin-msg" style="color: green;"></p>
-  </section>
+    <!-- Admin Panel View -->
+    <section id="admin-panel" class="hidden">
+      <h2>Add New Restaurant</h2>
+      <input type="text" id="res-name" placeholder="Restaurant Name" /><br />
+      <input type="text" id="res-cuisine" placeholder="Cuisine" /><br />
+      <input type="text" id="res-menu" placeholder="Menu (comma-separated)" /><br />
+      <input type="text" id="res-image" placeholder="Image URL" /><br />
+      <button onclick="addRestaurant()">Add Restaurant</button>
+      <p id="admin-msg" style="color: green;"></p>
+    </section>
   </main>
+
+  <!-- Cart Modal -->
   <div id="cart-modal" class="modal hidden">
     <div class="modal-content">
-      <h2>Cart</h2>
+      <h2>Your Cart</h2>
       <ul id="cart-items"></ul>
       <button onclick="closeCart()">Close</button>
+      <button onclick="placeOrder()">Place Order</button>
     </div>
   </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden"></div>
+
   <footer>
     <p>&copy; 2025 SmartMeal</p>
   </footer>
