@@ -18,6 +18,12 @@ const defaultRestaurants = [
     cuisine: "Asian",
     image: "assets/noodles.png",
     menu: ["Noodles", "Fried Rice", "Spring Rolls"]
+  },
+  {
+    name: "Burger Place",
+    cuisine: "American",
+    image: "assets/burger.png",
+    menu: ["Harmburger", "Cheeseburger", "Chicken Nuggets"]
   }
 ];
 
