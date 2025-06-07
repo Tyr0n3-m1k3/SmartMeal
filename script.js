@@ -1,5 +1,5 @@
 let cart = JSON.parse(localStorage.getItem("cart") || "[]");
-let userRole = null;
+let userRole = null; // "customer" or "owner"
 let selectedImageBase64 = "";
 
 const defaultRestaurants = [
@@ -168,19 +168,20 @@ function viewRestaurant(index) {
   menuList.innerHTML = "";
 
   formattedMenu.forEach(item => {
+    const itemStr = encodeURIComponent(JSON.stringify(item));
     const div = document.createElement("div");
     div.className = "menu-item";
     div.innerHTML = `
       <p><strong>${item.name}</strong> - $${item.price}</p>
-      <button onclick='addItemToCart(${JSON.stringify(JSON.stringify(item))})'>Add to Cart</button>
+      <button onclick="addItemToCart('${itemStr}')">Add to Cart</button>
     `;
     menuList.appendChild(div);
   });
 }
 
-function addItemToCart(itemJsonStr) {
+function addItemToCart(encodedItemStr) {
   try {
-    const item = JSON.parse(JSON.parse(itemJsonStr));
+    const item = JSON.parse(decodeURIComponent(encodedItemStr));
     cart.push(item);
     localStorage.setItem("cart", JSON.stringify(cart));
     document.getElementById("cart-count").textContent = cart.length;
@@ -207,14 +208,14 @@ function viewCart() {
 
   let total = 0;
 
-  Object.entries(itemMap).forEach(([name, { price, quantity }]) => {
+  Object.values(itemMap).forEach(({ name, price, quantity }) => {
     const subtotal = price * quantity;
     total += subtotal;
 
     const li = document.createElement("li");
     li.innerHTML = `
-      <strong>${name}</strong> x${quantity} - $${subtotal.toFixed(2)}
-      <button onclick="removeAllOfItem('${name}')">Remove All</button>
+      ${name} x${quantity} - $${subtotal}
+      <button onclick="removeFromCartByName('${name}')">Remove</button>
     `;
     cartList.appendChild(li);
   });
@@ -223,12 +224,13 @@ function viewCart() {
   document.getElementById("cart-modal").classList.remove("hidden");
 }
 
-function removeAllOfItem(name) {
-  cart = cart.filter(item => item.name !== name);
+function removeFromCartByName(name) {
+  const index = cart.findIndex(item => item.name === name);
+  if (index !== -1) cart.splice(index, 1);
   localStorage.setItem("cart", JSON.stringify(cart));
   document.getElementById("cart-count").textContent = cart.length;
   viewCart();
-  showToast(`All '${name}' items removed from cart`);
+  showToast(`${name} removed from cart`);
 }
 
 function closeCart() {
