@@ -17,6 +17,7 @@ body {
   font-family: 'Segoe UI', sans-serif;
   background-color: var(--bg-dark);
   color: var(--text-light);
+  font-size: 16px;
 }
 
 header {
@@ -42,8 +43,10 @@ nav a:hover {
 main {
   padding: 2rem;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
+  max-width: 1200px;
+  margin: auto;
 }
 
 .restaurant {
@@ -53,6 +56,7 @@ main {
   box-shadow: 0 0 10px rgba(255, 165, 0, 0.2);
   padding: 1rem;
   transition: transform 0.3s ease;
+  max-width: 100%;
 }
 
 .restaurant:hover {
@@ -62,6 +66,9 @@ main {
 
 .restaurant img {
   width: 100%;
+  height: auto;
+  max-height: 200px;
+  object-fit: cover;
   border-radius: 8px;
   margin-bottom: 0.5rem;
 }
@@ -105,6 +112,7 @@ footer {
   padding: 2rem;
   border-radius: 10px;
   width: 300px;
+  max-width: 90vw;
 }
 
 input,
@@ -141,6 +149,8 @@ select {
   opacity: 0;
   transition: opacity 0.3s ease, bottom 0.3s ease;
   z-index: 9999;
+  max-width: 90vw;
+  text-align: center;
 }
 
 .toast.show {
@@ -171,8 +181,18 @@ select {
   background: darkred;
 }
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
+/* Responsive text */
+@media (max-width: 768px) {
+  body {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+
   nav {
     flex-direction: column;
     align-items: flex-start;
@@ -180,17 +200,6 @@ select {
 
   nav a {
     margin: 0.5rem 0;
-  }
-
-  main {
-    grid-template-columns: 1fr;
-    padding: 1rem;
-  }
-
-  .restaurant img {
-    height: auto;
-    max-height: 200px;
-    object-fit: cover;
   }
 
   .modal-content {
@@ -212,6 +221,11 @@ select {
 
   #cart-items button {
     margin: 0.3rem 0 0;
+  }
+
+  main {
+    padding: 1rem;
+    grid-template-columns: 1fr;
   }
 }
 
