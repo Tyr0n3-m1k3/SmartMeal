@@ -13,7 +13,7 @@
     <nav id="main-nav">
       <a href="#" onclick="showHome()">Home</a>
       <a href="#" onclick="viewCart()">Cart (<span id="cart-count">0</span>)</a>
-      <a href="#" onclick="showLogin()">Admin</a>
+      <a href="#" onclick="toggleLogin()">Login</a>
     </nav>
   </header>
 
@@ -24,18 +24,9 @@
       <div id="restaurant-list"></div>
     </section>
 
-    <!-- Admin Login View -->
-    <section id="admin-login" class="hidden">
-      <h2>Admin Login</h2>
-      <input type="text" id="admin-username" placeholder="Username" />
-      <input type="password" id="admin-password" placeholder="Password" />
-      <button onclick="loginAdmin()">Login</button>
-      <p id="admin-error" style="color: red;"></p>
-    </section>
-
     <!-- Admin Panel View -->
     <section id="admin-panel" class="hidden">
-      <h2>Add New Restaurant</h2>
+      <h2>Add / Edit Restaurant</h2>
       <input type="text" id="res-name" placeholder="Restaurant Name" /><br />
       <input type="text" id="res-cuisine" placeholder="Cuisine" /><br />
       <input type="text" id="res-menu" placeholder="Menu (comma-separated)" /><br />
@@ -52,6 +43,21 @@
       <ul id="cart-items"></ul>
       <button onclick="closeCart()">Close</button>
       <button onclick="placeOrder()">Place Order</button>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="login-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Login</h2>
+      <select id="login-role">
+        <option value="customer">Customer</option>
+        <option value="owner">Restaurant Owner</option>
+      </select>
+      <input type="text" id="login-username" placeholder="Username" />
+      <input type="password" id="login-password" placeholder="Password" />
+      <button onclick="handleLogin()">Login</button>
+      <p id="login-error" style="color: red;"></p>
     </div>
   </div>
 
