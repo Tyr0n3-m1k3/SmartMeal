@@ -1,4 +1,5 @@
 let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+let userRole = null; // "customer" or "owner"
 
 const defaultRestaurants = [
   {
@@ -24,7 +25,7 @@ const defaultRestaurants = [
     cuisine: "American",
     image: "assets/burger.png",
     menu: ["Harmburger", "Cheeseburger", "Chicken Nuggets"]
-  }, 
+  },
   {
     name: "Shake Joint",
     cuisine: "Global",
@@ -37,6 +38,40 @@ document.getElementById("menu-toggle")?.addEventListener("click", () => {
   document.querySelector("nav").classList.toggle("show");
 });
 
+function toggleLogin() {
+  document.getElementById("login-modal").classList.remove("hidden");
+}
+
+function handleLogin() {
+  const role = document.getElementById("login-role").value;
+  const username = document.getElementById("login-username").value;
+  const password = document.getElementById("login-password").value;
+  const errorField = document.getElementById("login-error");
+
+  if (role === "owner") {
+    if (username === "admin" && password === "admin123") {
+      userRole = "owner";
+      showAdminPanel();
+      showToast("Logged in as Restaurant Owner");
+    } else {
+      errorField.textContent = "Invalid owner credentials.";
+      return;
+    }
+  } else if (role === "customer") {
+    if (username.trim() && password.trim()) {
+      userRole = "customer";
+      showHome();
+      showToast("Logged in as Customer");
+    } else {
+      errorField.textContent = "Enter a valid username and password.";
+      return;
+    }
+  }
+
+  document.getElementById("login-modal").classList.add("hidden");
+  loadRestaurants();
+}
+
 function loadRestaurants(filter = "") {
   const container = document.getElementById("restaurant-list");
   container.innerHTML = "";
@@ -48,7 +83,7 @@ function loadRestaurants(filter = "") {
       const search = filter.toLowerCase();
       return res.name.toLowerCase().includes(search) || res.cuisine.toLowerCase().includes(search);
     })
-    .forEach(res => {
+    .forEach((res, index) => {
       const div = document.createElement("div");
       div.className = "restaurant";
       div.innerHTML = `
@@ -57,6 +92,12 @@ function loadRestaurants(filter = "") {
         <p><strong>Cuisine:</strong> ${res.cuisine}</p>
         <p><strong>Menu:</strong> ${res.menu.join(", ")}</p>
         <button onclick="addToCart('${res.name}')">Order from ${res.name}</button>
+        ${
+          userRole === "owner" && index >= defaultRestaurants.length
+            ? `<button onclick="editRestaurant(${index})">Edit</button>
+               <button onclick="deleteRestaurant(${index})">Delete</button>`
+            : ""
+        }
       `;
       container.appendChild(div);
     });
@@ -117,30 +158,12 @@ function placeOrder() {
 
 function showHome() {
   document.getElementById("home-view").classList.remove("hidden");
-  document.getElementById("admin-login").classList.add("hidden");
-  document.getElementById("admin-panel").classList.add("hidden");
-}
-
-function showLogin() {
-  document.getElementById("home-view").classList.add("hidden");
-  document.getElementById("admin-login").classList.remove("hidden");
   document.getElementById("admin-panel").classList.add("hidden");
 }
 
 function showAdminPanel() {
   document.getElementById("home-view").classList.add("hidden");
-  document.getElementById("admin-login").classList.add("hidden");
   document.getElementById("admin-panel").classList.remove("hidden");
-}
-
-function loginAdmin() {
-  const username = document.getElementById("admin-username").value;
-  const password = document.getElementById("admin-password").value;
-  if (username === "admin" && password === "admin123") {
-    showAdminPanel();
-  } else {
-    document.getElementById("admin-error").textContent = "Invalid credentials.";
-  }
 }
 
 function addRestaurant() {
@@ -167,7 +190,62 @@ function addRestaurant() {
   showToast("New restaurant added");
 }
 
-// Toast system
+function deleteRestaurant(index) {
+  const saved = JSON.parse(localStorage.getItem("restaurants") || "[]");
+  if (index >= defaultRestaurants.length) {
+    const adminIndex = index - defaultRestaurants.length;
+    saved.splice(adminIndex, 1);
+    localStorage.setItem("restaurants", JSON.stringify(saved));
+    loadRestaurants();
+    showToast("Restaurant deleted.");
+  } else {
+    showToast("Cannot delete default restaurants.");
+  }
+}
+
+function editRestaurant(index) {
+  const allRestaurants = [...defaultRestaurants, ...JSON.parse(localStorage.getItem("restaurants") || "[]")];
+  const res = allRestaurants[index];
+  if (index < defaultRestaurants.length) {
+    showToast("Cannot edit default restaurants.");
+    return;
+  }
+
+  const adminIndex = index - defaultRestaurants.length;
+
+  document.getElementById("res-name").value = res.name;
+  document.getElementById("res-cuisine").value = res.cuisine;
+  document.getElementById("res-menu").value = res.menu.join(", ");
+  document.getElementById("res-image").value = res.image;
+
+  showAdminPanel();
+
+  document.getElementById("admin-msg").textContent = "Edit mode: Updating restaurant...";
+
+  const oldButton = document.querySelector('#admin-panel button[onclick="addRestaurant()"]');
+  oldButton.textContent = "Update Restaurant";
+  oldButton.onclick = function () {
+    const name = document.getElementById("res-name").value.trim();
+    const cuisine = document.getElementById("res-cuisine").value.trim();
+    const menu = document.getElementById("res-menu").value.split(",").map(item => item.trim());
+    const image = document.getElementById("res-image").value.trim();
+
+    const stored = JSON.parse(localStorage.getItem("restaurants") || "[]");
+    stored[adminIndex] = { name, cuisine, menu, image };
+    localStorage.setItem("restaurants", JSON.stringify(stored));
+
+    showToast("Restaurant updated!");
+    document.getElementById("admin-msg").textContent = "";
+    loadRestaurants();
+    oldButton.textContent = "Add Restaurant";
+    oldButton.setAttribute("onclick", "addRestaurant()");
+    document.getElementById("res-name").value = "";
+    document.getElementById("res-cuisine").value = "";
+    document.getElementById("res-menu").value = "";
+    document.getElementById("res-image").value = "";
+  };
+}
+
 function showToast(message) {
   const toast = document.getElementById("toast");
   toast.textContent = message;
@@ -180,7 +258,6 @@ function showToast(message) {
   }, 3000);
 }
 
-// Search functionality
 document.getElementById("search-bar")?.addEventListener("input", (e) => {
   loadRestaurants(e.target.value);
 });
