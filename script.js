@@ -1,5 +1,6 @@
 let cart = JSON.parse(localStorage.getItem("cart") || "[]");
 let userRole = null; // "customer" or "owner"
+let selectedImageBase64 = ""; // For uploaded image
 
 const defaultRestaurants = [
   {
@@ -31,7 +32,7 @@ const defaultRestaurants = [
     cuisine: "Global",
     image: "assets/shake.png",
     menu: ["Chocolate", "Strawberry", "Vanilla"]
-  }, 
+  },
   {
     name: "Sushi Palace",
     cuisine: "Sea food",
@@ -176,7 +177,7 @@ function addRestaurant() {
   const name = document.getElementById("res-name").value.trim();
   const cuisine = document.getElementById("res-cuisine").value.trim();
   const menu = document.getElementById("res-menu").value.split(",").map(item => item.trim());
-  const image = document.getElementById("res-image").value.trim();
+  const image = selectedImageBase64 || "assets/placeholder.png";
 
   if (!name || !cuisine || !menu.length || !image) {
     showToast("Please fill in all fields");
@@ -190,7 +191,11 @@ function addRestaurant() {
   document.getElementById("res-name").value = "";
   document.getElementById("res-cuisine").value = "";
   document.getElementById("res-menu").value = "";
-  document.getElementById("res-image").value = "";
+  document.getElementById("res-image-file").value = "";
+  document.getElementById("image-preview").src = "";
+  document.getElementById("image-preview").style.display = "none";
+  selectedImageBase64 = "";
+
   document.getElementById("admin-msg").textContent = "Restaurant added successfully!";
   loadRestaurants();
   showToast("New restaurant added");
@@ -222,10 +227,11 @@ function editRestaurant(index) {
   document.getElementById("res-name").value = res.name;
   document.getElementById("res-cuisine").value = res.cuisine;
   document.getElementById("res-menu").value = res.menu.join(", ");
-  document.getElementById("res-image").value = res.image;
+  document.getElementById("image-preview").src = res.image;
+  document.getElementById("image-preview").style.display = "block";
+  selectedImageBase64 = res.image;
 
   showAdminPanel();
-
   document.getElementById("admin-msg").textContent = "Edit mode: Updating restaurant...";
 
   const oldButton = document.querySelector('#admin-panel button[onclick="addRestaurant()"]');
@@ -234,7 +240,7 @@ function editRestaurant(index) {
     const name = document.getElementById("res-name").value.trim();
     const cuisine = document.getElementById("res-cuisine").value.trim();
     const menu = document.getElementById("res-menu").value.split(",").map(item => item.trim());
-    const image = document.getElementById("res-image").value.trim();
+    const image = selectedImageBase64 || "assets/placeholder.png";
 
     const stored = JSON.parse(localStorage.getItem("restaurants") || "[]");
     stored[adminIndex] = { name, cuisine, menu, image };
@@ -243,12 +249,17 @@ function editRestaurant(index) {
     showToast("Restaurant updated!");
     document.getElementById("admin-msg").textContent = "";
     loadRestaurants();
+
     oldButton.textContent = "Add Restaurant";
     oldButton.setAttribute("onclick", "addRestaurant()");
+
     document.getElementById("res-name").value = "";
     document.getElementById("res-cuisine").value = "";
     document.getElementById("res-menu").value = "";
-    document.getElementById("res-image").value = "";
+    document.getElementById("res-image-file").value = "";
+    document.getElementById("image-preview").src = "";
+    document.getElementById("image-preview").style.display = "none";
+    selectedImageBase64 = "";
   };
 }
 
@@ -266,6 +277,25 @@ function showToast(message) {
 
 document.getElementById("search-bar")?.addEventListener("input", (e) => {
   loadRestaurants(e.target.value);
+});
+
+document.getElementById("res-image-file")?.addEventListener("change", function (e) {
+  const file = e.target.files[0];
+  const preview = document.getElementById("image-preview");
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (evt) {
+      selectedImageBase64 = evt.target.result;
+      preview.src = selectedImageBase64;
+      preview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  } else {
+    selectedImageBase64 = "";
+    preview.src = "";
+    preview.style.display = "none";
+  }
 });
 
 document.addEventListener("DOMContentLoaded", () => {
