@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartMeal</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>SmartMeal</h1>
+    <nav>
+      <a href="#">Home</a>
+      <a href="#">Restaurants</a>
+      <a href="#" onclick="viewCart()">Cart (<span id="cart-count">0</span>)</a>
+    </nav>
+  </header>
+
+  <main id="restaurant-list"></main>
+
+  <div id="cart-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Cart</h2>
+      <ul id="cart-items"></ul>
+      <button onclick="closeCart()">Close</button>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 SmartMeal</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

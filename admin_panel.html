@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - SmartMeal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="admin-panel">
+    <h2>Add New Restaurant</h2>
+    <input type="text" id="res-name" placeholder="Restaurant Name"><br>
+    <input type="text" id="res-cuisine" placeholder="Cuisine"><br>
+    <input type="text" id="res-menu" placeholder="Menu (comma-separated)"><br>
+    <input type="text" id="res-image" placeholder="Image URL"><br>
+    <button onclick="addRestaurant()">Add Restaurant</button>
+    <p id="admin-msg" style="color: green;"></p>
+  </main>
+
+  <script>
+    function addRestaurant() {
+      const name = document.getElementById("res-name").value;
+      const cuisine = document.getElementById("res-cuisine").value;
+      const menu = document.getElementById("res-menu").value.split(",");
+      const image = document.getElementById("res-image").value;
+
+      let stored = JSON.parse(localStorage.getItem("restaurants") || "[]");
+      stored.push({ name, cuisine, menu, image });
+      localStorage.setItem("restaurants", JSON.stringify(stored));
+
+      document.getElementById("admin-msg").textContent = "Restaurant added successfully!";
+    }
+  </script>
+</body>
+</html>
