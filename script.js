@@ -31,6 +31,12 @@ const defaultRestaurants = [
     cuisine: "Global",
     image: "assets/shake.png",
     menu: ["Chocolate", "Strawberry", "Vanilla"]
+  }, 
+  {
+    name: "Sushi Palace",
+    cuisine: "Sea food",
+    image: "assets/sushi.png",
+    menu: ["crab", "shrimp", "sushi"]
   }
 ];
 
