@@ -26,7 +26,7 @@ const defaultRestaurants = [
     menu: ["Harmburger", "Cheeseburger", "Chicken Nuggets"]
   }, 
   {
-    name: "Shake Place",
+    name: "Shake Joint",
     cuisine: "Global",
     image: "assets/shake.png",
     menu: ["Chocolate", "Strawberry", "Vanilla"]
