@@ -33,6 +33,10 @@ const defaultRestaurants = [
   }
 ];
 
+document.getElementById("menu-toggle")?.addEventListener("click", () => {
+  document.querySelector("nav").classList.toggle("show");
+});
+
 function loadRestaurants() {
   const container = document.getElementById("restaurant-list");
   container.innerHTML = "";
