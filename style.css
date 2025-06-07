@@ -40,13 +40,15 @@ nav a:hover {
   color: var(--highlight);
 }
 
+/* ✅ Improved Responsive Grid Layout */
 main {
   padding: 2rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
-  max-width: 1200px;
-  margin: auto;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .restaurant {
@@ -56,7 +58,9 @@ main {
   box-shadow: 0 0 10px rgba(255, 165, 0, 0.2);
   padding: 1rem;
   transition: transform 0.3s ease;
-  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .restaurant:hover {
@@ -96,6 +100,7 @@ footer {
   margin-top: 2rem;
 }
 
+/* Modal Styles */
 .modal {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
