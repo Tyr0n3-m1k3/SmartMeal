@@ -2,9 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SmartMeal</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Minimal toast styling if not in CSS */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -24,7 +43,7 @@
       <div id="restaurant-list"></div>
     </section>
 
-    <!-- ✅ New: Restaurant Detail View -->
+    <!-- Restaurant Detail View -->
     <section id="restaurant-view" class="hidden">
       <button onclick="showHome()">← Back to Restaurants</button>
       <div id="restaurant-details">
@@ -55,7 +74,7 @@
     <div class="modal-content">
       <h2>Your Cart</h2>
       <ul id="cart-items"></ul>
-      <p><strong>Total:</strong> $<span id="cart-total">0</span></p>
+      <p><strong>Total:</strong> $<span id="cart-total">0.00</span></p>
       <button onclick="closeCart()">Close</button>
       <button onclick="placeOrder()">Place Order</button>
     </div>
