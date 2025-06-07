@@ -1,5 +1,5 @@
 let cart = JSON.parse(localStorage.getItem("cart") || "[]");
-let userRole = null; // "customer" or "owner"
+let userRole = null;
 let selectedImageBase64 = "";
 
 const defaultRestaurants = [
@@ -179,11 +179,16 @@ function viewRestaurant(index) {
 }
 
 function addItemToCart(itemJsonStr) {
-  const item = JSON.parse(JSON.parse(itemJsonStr));
-  cart.push(item);
-  localStorage.setItem("cart", JSON.stringify(cart));
-  document.getElementById("cart-count").textContent = cart.length;
-  showToast(`${item.name} added to cart`);
+  try {
+    const item = JSON.parse(JSON.parse(itemJsonStr));
+    cart.push(item);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    document.getElementById("cart-count").textContent = cart.length;
+    showToast(`${item.name} added to cart`);
+  } catch (e) {
+    console.error("Error adding item to cart:", e);
+    showToast("Failed to add item to cart");
+  }
 }
 
 function viewCart() {
@@ -202,14 +207,14 @@ function viewCart() {
 
   let total = 0;
 
-  Object.values(itemMap).forEach(({ name, price, quantity }) => {
+  Object.entries(itemMap).forEach(([name, { price, quantity }]) => {
     const subtotal = price * quantity;
     total += subtotal;
 
     const li = document.createElement("li");
     li.innerHTML = `
-      ${name} x${quantity} - $${subtotal}
-      <button onclick="removeFromCartByName('${name}')">Remove</button>
+      <strong>${name}</strong> x${quantity} - $${subtotal.toFixed(2)}
+      <button onclick="removeAllOfItem('${name}')">Remove All</button>
     `;
     cartList.appendChild(li);
   });
@@ -218,13 +223,12 @@ function viewCart() {
   document.getElementById("cart-modal").classList.remove("hidden");
 }
 
-function removeFromCartByName(name) {
-  const index = cart.findIndex(item => item.name === name);
-  if (index !== -1) cart.splice(index, 1);
+function removeAllOfItem(name) {
+  cart = cart.filter(item => item.name !== name);
   localStorage.setItem("cart", JSON.stringify(cart));
   document.getElementById("cart-count").textContent = cart.length;
   viewCart();
-  showToast(`${name} removed from cart`);
+  showToast(`All '${name}' items removed from cart`);
 }
 
 function closeCart() {
