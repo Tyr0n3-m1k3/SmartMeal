@@ -14,11 +14,38 @@
       <a href="#">Restaurants</a>
       <a href="#" onclick="viewCart()">Cart (<span id="cart-count">0</span>)</a>
       <a href="#">Login</a>
+      <a href="#" onclick="showHome()">Home</a>
+      <a href="#" onclick="showCart()">Cart (<span id="cart-count">0</span>)</a>
+      <a href="#" onclick="showLogin()">Admin</a>
     </nav>
   </header>
 
-  <main id="restaurant-list"></main>
+  <main>
+  <!-- Home View -->
+  <section id="home-view">
+    <div id="restaurant-list"></div>
+  </section>
 
+  <!-- Admin Login -->
+  <section id="admin-login" class="hidden">
+    <h2>Admin Login</h2>
+    <input type="text" id="admin-username" placeholder="Username">
+    <input type="password" id="admin-password" placeholder="Password">
+    <button onclick="loginAdmin()">Login</button>
+    <p id="admin-error" style="color: red;"></p>
+  </section>
+
+  <!-- Admin Panel -->
+  <section id="admin-panel" class="hidden">
+    <h2>Add New Restaurant</h2>
+    <input type="text" id="res-name" placeholder="Restaurant Name"><br>
+    <input type="text" id="res-cuisine" placeholder="Cuisine"><br>
+    <input type="text" id="res-menu" placeholder="Menu (comma-separated)"><br>
+    <input type="text" id="res-image" placeholder="Image URL"><br>
+    <button onclick="addRestaurant()">Add Restaurant</button>
+    <p id="admin-msg" style="color: green;"></p>
+  </section>
+  </main>
   <div id="cart-modal" class="modal hidden">
     <div class="modal-content">
       <h2>Cart</h2>
@@ -26,7 +53,6 @@
       <button onclick="closeCart()">Close</button>
     </div>
   </div>
-
   <footer>
     <p>&copy; 2025 SmartMeal</p>
   </footer>
