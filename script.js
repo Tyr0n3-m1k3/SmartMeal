@@ -146,12 +146,8 @@ function loadRestaurants(filter = "") {
       container.appendChild(div);
     });
 }
-
-function viewRestaurant(index) {
-  const savedRestaurants = JSON.parse(localStorage.getItem("restaurants") || "[]");
-  const restaurants = [...defaultRestaurants, ...savedRestaurants];
-  const restaurant = restaurants[index];
-
+function viewRestaurant(resJsonStr) {
+  const restaurant = JSON.parse(JSON.parse(resJsonStr));
   const formattedMenu = restaurant.menu.map(item =>
     typeof item === "string" ? { name: item, price: 100 } : item
   );
