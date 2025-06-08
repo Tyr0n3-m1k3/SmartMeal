@@ -146,11 +146,11 @@ function loadRestaurants(filter = "") {
       container.appendChild(div);
     });
 }
-function viewRestaurant(resJsonStr) {
-  const restaurant = JSON.parse(JSON.parse(resJsonStr));
-  const formattedMenu = restaurant.menu.map(item =>
-    typeof item === "string" ? { name: item, price: 100 } : item
-  );
+
+function viewRestaurant(index) {
+  const savedRestaurants = JSON.parse(localStorage.getItem("restaurants") || "[]");
+  const restaurants = [...defaultRestaurants, ...savedRestaurants];
+  const restaurant = restaurants[index];
 
   document.getElementById("home-view").classList.add("hidden");
   document.getElementById("admin-panel").classList.add("hidden");
