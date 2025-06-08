@@ -115,6 +115,47 @@ function showAdminPanel() {
   document.getElementById("admin-panel").classList.remove("hidden");
 }
 
+function showCart() {
+  document.getElementById("cart-items").innerHTML = "";
+  let total = 0;
+  cart.forEach((item, index) => {
+    const div = document.createElement("div");
+    div.className = "cart-item";
+    div.innerHTML = `
+      <span>${item.name} - $${item.price}</span>
+      <button onclick="removeFromCart(${index})">Remove</button>
+    `;
+    document.getElementById("cart-items").appendChild(div);
+    total += item.price;
+  });
+  document.getElementById("cart-total").textContent = `Total: $${total}`;
+  document.getElementById("cart-modal").classList.remove("hidden");
+}
+
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  showCart();
+}
+
+function addItemToCart(itemStr) {
+  const item = JSON.parse(decodeURIComponent(itemStr));
+  cart.push(item);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  showToast(`${item.name} added to cart`);
+}
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+  setTimeout(() => toast.classList.add("hidden"), 3000);
+}
+
+function closeCart() {
+  document.getElementById("cart-modal").classList.add("hidden");
+}
+
 function loadRestaurants(filter = "") {
   const container = document.getElementById("restaurant-list");
   container.innerHTML = "";
@@ -176,5 +217,3 @@ function viewRestaurant(resJsonStr) {
     menuList.appendChild(div);
   });
 }
-
-// ... continue with cart handling, add/edit/delete restaurant, toast handling etc.
