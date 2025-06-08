@@ -152,6 +152,10 @@ function viewRestaurant(index) {
   const restaurants = [...defaultRestaurants, ...savedRestaurants];
   const restaurant = restaurants[index];
 
+  const formattedMenu = restaurant.menu.map(item =>
+    typeof item === "string" ? { name: item, price: 100 } : item
+  );
+
   document.getElementById("home-view").classList.add("hidden");
   document.getElementById("admin-panel").classList.add("hidden");
   document.getElementById("restaurant-view").classList.remove("hidden");
