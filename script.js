@@ -1,13 +1,32 @@
-let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+// DOM Elements
+const views = {
+  home: document.getElementById('home-view'),
+  restaurant: document.getElementById('restaurant-view'),
+  admin: document.getElementById('admin-panel'),
+  cart: document.getElementById('cart-view'),
+  payment: document.getElementById('payment-view')
+};
+
+const modal = document.getElementById('login-modal');
+const menuToggle = document.getElementById('menu-toggle');
+const nav = document.getElementById('main-nav');
+const searchBar = document.getElementById('search-bar');
+const restaurantList = document.getElementById('restaurant-list');
+const cartCount = document.getElementById('cart-count');
+const toast = document.getElementById('toast');
+
+// App State
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let userRole = null;
-let selectedImageBase64 = "";
+let selectedImageBase64 = '';
 let currentRestaurantIndex = null;
 
+// Sample Data
 const defaultRestaurants = [
   {
     name: "Mama's Kitchen",
     cuisine: "African",
-    image: "assets/ugali.png",
+    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60",
     menu: [
       { name: "Ugali", price: 200 },
       { name: "Sukuma Wiki", price: 150 },
@@ -17,7 +36,7 @@ const defaultRestaurants = [
   {
     name: "Pizza Hub",
     cuisine: "Italian",
-    image: "assets/pizza.png",
+    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&auto=format&fit=crop&q=60",
     menu: [
       { name: "Margherita", price: 500 },
       { name: "Pepperoni", price: 600 },
@@ -27,259 +46,251 @@ const defaultRestaurants = [
   {
     name: "Wok & Roll",
     cuisine: "Asian",
-    image: "assets/noodles.png",
+    image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&auto=format&fit=crop&q=60",
     menu: [
       { name: "Noodles", price: 350 },
       { name: "Fried Rice", price: 300 },
       { name: "Spring Rolls", price: 250 }
     ]
+  },
+  {
+    name: "Burger Place",
+    cuisine: "American",
+    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60",
+    menu: [
+      { name: "Hamburger", price: 400 },
+      { name: "Cheeseburger", price: 450 },
+      { name: "Chicken Nuggets", price: 300 }
+    ]
   }
 ];
 
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("menu-toggle")?.addEventListener("click", () => {
-    document.querySelector("nav").classList.toggle("show");
+// Initialize App
+function init() {
+  setupEventListeners();
+  loadRestaurants();
+  updateCartCount();
+}
+
+// Event Listeners
+function setupEventListeners() {
+  // Navigation
+  menuToggle.addEventListener('click', toggleMobileNav);
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const view = e.target.getAttribute('data-view');
+      showView(view);
+      if (nav.classList.contains('active')) toggleMobileNav();
+    });
   });
 
-  document.getElementById("search-bar")?.addEventListener("input", (e) => {
+  document.querySelectorAll('.back-button').forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      const view = e.target.getAttribute('data-view');
+      showView(view);
+    });
+  });
+
+  // Search
+  searchBar.addEventListener('input', (e) => {
     loadRestaurants(e.target.value);
   });
 
-  document.getElementById("res-image-file")?.addEventListener("change", function(e) {
-    const file = e.target.files[0];
-    const preview = document.getElementById("image-preview");
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        selectedImageBase64 = evt.target.result;
-        preview.src = selectedImageBase64;
-        preview.style.display = "block";
-      };
-      reader.readAsDataURL(file);
-    }
-  });
+  // Image Upload
+  document.getElementById('res-image-file').addEventListener('change', handleImageUpload);
 
-  // Payment method selection
+  // Payment Methods
   document.querySelectorAll('.payment-method').forEach(method => {
-    method.addEventListener('click', function() {
-      document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
-      this.classList.add('selected');
-      document.querySelectorAll('.payment-form').forEach(form => form.classList.add('hidden'));
-      document.getElementById(`${this.dataset.method}-payment`).classList.remove('hidden');
-    });
+    method.addEventListener('click', selectPaymentMethod);
   });
 
-  loadRestaurants();
-  document.getElementById("cart-count").textContent = cart.length;
-});
-
-function flipCard() {
-  document.querySelector('.flip-card').classList.toggle('flipped');
+  // Login Modal
+  document.querySelector('.close-modal').addEventListener('click', () => {
+    hideModal('login-modal');
+  });
 }
 
-function socialLogin(provider) {
-  showToast(`Logging in with ${provider.charAt(0).toUpperCase() + provider.slice(1)}...`);
-  setTimeout(() => {
-    userRole = "customer";
-    showHome();
-    showToast("Logged in successfully!");
-    document.getElementById("login-modal").classList.add("hidden");
-  }, 1000);
-}
+// View Management
+function showView(viewName) {
+  // Hide all views
+  Object.values(views).forEach(view => {
+    view.classList.remove('active');
+  });
 
-function ownerLogin() {
-  const username = document.getElementById("owner-username").value;
-  const password = document.getElementById("owner-password").value;
-  
-  if (username === "admin" && password === "admin123") {
-    userRole = "owner";
-    showAdminPanel();
-    showToast("Logged in as Restaurant Owner");
-    document.getElementById("login-modal").classList.add("hidden");
-  } else {
-    document.getElementById("login-error").textContent = "Invalid owner credentials.";
+  // Show selected view
+  if (views[viewName]) {
+    views[viewName].classList.add('active');
+  }
+
+  // Special cases
+  if (viewName === 'login') {
+    showModal('login-modal');
+    showView('home');
+  } else if (viewName === 'cart') {
+    renderCart();
   }
 }
 
-function toggleLogin() {
-  document.getElementById("login-modal").classList.remove("hidden");
-  document.querySelector('.flip-card').classList.remove('flipped');
+function showModal(modalId) {
+  document.getElementById(modalId).classList.add('active');
 }
 
-function showHome() {
-  document.getElementById("home-view").classList.remove("hidden");
-  document.getElementById("restaurant-view").classList.add("hidden");
-  document.getElementById("admin-panel").classList.add("hidden");
-  document.getElementById("payment-view").classList.add("hidden");
+function hideModal(modalId) {
+  document.getElementById(modalId).classList.remove('active');
 }
 
-function showAdminPanel() {
-  document.getElementById("home-view").classList.add("hidden");
-  document.getElementById("restaurant-view").classList.add("hidden");
-  document.getElementById("admin-panel").classList.remove("hidden");
-  document.getElementById("payment-view").classList.add("hidden");
-  document.getElementById("admin-msg").textContent = "";
-}
-
-function loadRestaurants(filter = "") {
-  const container = document.getElementById("restaurant-list");
-  container.innerHTML = "";
-  const savedRestaurants = JSON.parse(localStorage.getItem("restaurants") || "[]");
+// Restaurant Functions
+function loadRestaurants(filter = '') {
+  const savedRestaurants = JSON.parse(localStorage.getItem('restaurants')) || [];
   const restaurants = [...defaultRestaurants, ...savedRestaurants];
+  
+  // Filter restaurants
+  const filtered = restaurants.filter(restaurant => {
+    const searchTerm = filter.toLowerCase();
+    return (
+      restaurant.name.toLowerCase().includes(searchTerm) ||
+      restaurant.cuisine.toLowerCase().includes(searchTerm)
+    );
+  });
 
-  restaurants
-    .filter(res => {
-      const search = filter.toLowerCase();
-      return res.name.toLowerCase().includes(search) || res.cuisine.toLowerCase().includes(search);
-    })
-    .forEach((res, index) => {
-      const div = document.createElement("div");
-      div.className = "restaurant";
-      div.innerHTML = `
-        <img src="${res.image}" alt="${res.name}" />
-        <h2>${res.name}</h2>
-        <p><strong>Cuisine:</strong> ${res.cuisine}</p>
-        <button onclick="viewRestaurant(${index})">View Menu</button>
-        ${
-          userRole === "owner" && index >= defaultRestaurants.length
-            ? `<button onclick="editRestaurant(${index})">Edit</button>
-               <button onclick="deleteRestaurant(${index})">Delete</button>`
-            : ""
-        }
-      `;
-      container.appendChild(div);
-    });
+  renderRestaurants(filtered);
+}
+
+function renderRestaurants(restaurants) {
+  restaurantList.innerHTML = '';
+
+  if (restaurants.length === 0) {
+    restaurantList.innerHTML = '<p class="no-results">No restaurants found</p>';
+    return;
+  }
+
+  restaurants.forEach((restaurant, index) => {
+    const card = document.createElement('div');
+    card.className = 'restaurant-card';
+    card.innerHTML = `
+      <img src="${restaurant.image}" alt="${restaurant.name}" class="restaurant-image">
+      <div class="restaurant-info">
+        <h3>${restaurant.name}</h3>
+        <p>${restaurant.cuisine}</p>
+        <button class="primary-btn" onclick="viewRestaurant(${index})">View Menu</button>
+        ${userRole === 'owner' && index >= defaultRestaurants.length ? `
+          <div class="admin-actions">
+            <button class="secondary-btn" onclick="editRestaurant(${index})">Edit</button>
+            <button class="danger-btn" onclick="deleteRestaurant(${index})">Delete</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+    restaurantList.appendChild(card);
+  });
 }
 
 function viewRestaurant(index) {
   currentRestaurantIndex = index;
-  const savedRestaurants = JSON.parse(localStorage.getItem("restaurants") || "[]");
+  const savedRestaurants = JSON.parse(localStorage.getItem('restaurants')) || [];
   const restaurants = [...defaultRestaurants, ...savedRestaurants];
   const restaurant = restaurants[index];
 
-  document.getElementById("home-view").classList.add("hidden");
-  document.getElementById("admin-panel").classList.add("hidden");
-  document.getElementById("restaurant-view").classList.remove("hidden");
+  // Update restaurant details
+  document.getElementById('restaurant-name').textContent = restaurant.name;
+  document.getElementById('restaurant-cuisine').textContent = restaurant.cuisine;
+  document.getElementById('restaurant-cover').src = restaurant.image;
 
-  const coverImg = document.getElementById("restaurant-cover");
-  coverImg.src = restaurant.image;
-  coverImg.onload = function() {
-    // Ensure image fits properly
-    this.style.objectFit = "contain";
-    this.style.maxHeight = "250px";
-    this.style.width = "100%";
-  };
-
-  document.getElementById("restaurant-name").textContent = restaurant.name;
-  document.getElementById("restaurant-cuisine").textContent = `Cuisine: ${restaurant.cuisine}`;
-
-  const menuList = document.getElementById("restaurant-menu-list");
-  menuList.innerHTML = "";
-
+  // Render menu
+  const menuList = document.getElementById('restaurant-menu-list');
+  menuList.innerHTML = '';
+  
   restaurant.menu.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "menu-item";
-    div.innerHTML = `
-      <p><strong>${item.name}</strong> - $${item.price.toFixed(2)}</p>
-      <button onclick="addItemToCart(${index}, '${encodeURIComponent(JSON.stringify(item))}')">Add to Cart</button>
+    const menuItem = document.createElement('div');
+    menuItem.className = 'menu-item';
+    menuItem.innerHTML = `
+      <div class="menu-item-info">
+        <h4>${item.name}</h4>
+        <p>$${item.price.toFixed(2)}</p>
+      </div>
+      <button class="primary-btn" onclick="addToCart(${index}, ${JSON.stringify(item).replace(/"/g, '&quot;')})">
+        Add to Cart
+      </button>
     `;
-    menuList.appendChild(div);
+    menuList.appendChild(menuItem);
   });
+
+  showView('restaurant');
 }
 
-function addItemToCart(restaurantIndex, encodedItemStr) {
-  try {
-    const item = JSON.parse(decodeURIComponent(encodedItemStr));
-    item.restaurantIndex = restaurantIndex;
-    cart.push(item);
-    localStorage.setItem("cart", JSON.stringify(cart));
-    document.getElementById("cart-count").textContent = cart.length;
-    showToast(`${item.name} added to cart`);
-  } catch (e) {
-    console.error("Error adding item to cart:", e);
-    showToast("Failed to add item to cart");
-  }
+// Cart Functions
+function addToCart(restaurantIndex, item) {
+  // Add restaurant index to item for reference
+  item.restaurantIndex = restaurantIndex;
+  cart.push(item);
+  saveCart();
+  updateCartCount();
+  showToast(`${item.name} added to cart`);
 }
 
-function viewCart() {
-  const cartList = document.getElementById("cart-items");
-  const totalElement = document.getElementById("cart-total");
-  cartList.innerHTML = "";
+function renderCart() {
+  const cartItems = document.getElementById('cart-items');
+  const cartTotal = document.getElementById('cart-total');
+  cartItems.innerHTML = '';
 
-  const itemMap = {};
+  // Group items by name and restaurant
+  const itemGroups = {};
   cart.forEach(item => {
-    const key = item.name + item.restaurantIndex;
-    if (!itemMap[key]) {
-      itemMap[key] = { ...item, quantity: 0 };
+    const key = `${item.name}-${item.restaurantIndex}`;
+    if (!itemGroups[key]) {
+      itemGroups[key] = { ...item, quantity: 0 };
     }
-    itemMap[key].quantity += 1;
+    itemGroups[key].quantity += 1;
   });
 
+  // Calculate total and render items
   let total = 0;
-
-  Object.values(itemMap).forEach(({ name, price, quantity, restaurantIndex }) => {
-    const subtotal = price * quantity;
+  Object.values(itemGroups).forEach(group => {
+    const subtotal = group.price * group.quantity;
     total += subtotal;
 
-    const li = document.createElement("li");
+    const li = document.createElement('li');
     li.innerHTML = `
-      ${name} x${quantity} - $${subtotal.toFixed(2)}
-      <button onclick="removeFromCart('${name}', ${restaurantIndex})">Remove</button>
+      <div class="cart-item-info">
+        <span>${group.name} x${group.quantity}</span>
+        <span>$${subtotal.toFixed(2)}</span>
+      </div>
+      <button class="remove-btn" onclick="removeFromCart('${group.name}', ${group.restaurantIndex})">
+        <i class="fas fa-trash"></i>
+      </button>
     `;
-    cartList.appendChild(li);
+    cartItems.appendChild(li);
   });
 
-  totalElement.textContent = total.toFixed(2);
-  document.getElementById("cart-modal").classList.remove("hidden");
+  cartTotal.textContent = total.toFixed(2);
 }
 
 function removeFromCart(name, restaurantIndex) {
-  const index = cart.findIndex(item => item.name === name && item.restaurantIndex === restaurantIndex);
-  if (index !== -1) cart.splice(index, 1);
-  localStorage.setItem("cart", JSON.stringify(cart));
-  document.getElementById("cart-count").textContent = cart.length;
-  viewCart();
-  showToast(`${name} removed from cart`);
-}
-
-function closeCart() {
-  document.getElementById("cart-modal").classList.add("hidden");
-}
-
-function showPayment() {
-  if (cart.length === 0) {
-    showToast("Your cart is empty!");
-    return;
-  }
-  document.getElementById("cart-modal").classList.add("hidden");
-  document.getElementById("payment-view").classList.remove("hidden");
-}
-
-function processPayment() {
-  const selectedMethod = document.querySelector('.payment-method.selected').dataset.method;
+  // Find and remove the first matching item
+  const index = cart.findIndex(item => 
+    item.name === name && item.restaurantIndex === restaurantIndex
+  );
   
-  if (selectedMethod === 'card') {
-    const cardNumber = document.getElementById('card-number').value;
-    const cardName = document.getElementById('card-name').value;
-    const cardExpiry = document.getElementById('card-expiry').value;
-    const cardCvv = document.getElementById('card-cvv').value;
-    
-    if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
-      showToast('Please fill all card details');
-      return;
-    }
+  if (index !== -1) {
+    cart.splice(index, 1);
+    saveCart();
+    updateCartCount();
+    renderCart();
+    showToast(`${name} removed from cart`);
   }
-  
-  showToast(`Processing ${selectedMethod} payment...`);
-  setTimeout(() => {
-    cart = [];
-    localStorage.removeItem("cart");
-    document.getElementById("cart-count").textContent = "0";
-    showToast("Payment successful! Order placed.");
-    showHome();
-  }, 2000);
 }
 
+function saveCart() {
+  localStorage.setItem('cart', JSON.stringify(cart));
+}
+
+function updateCartCount() {
+  cartCount.textContent = cart.length;
+}
+
+// Admin Functions
 function addMenuItem() {
   const container = document.getElementById('menu-items-container');
   const newItem = document.createElement('div');
@@ -293,70 +304,163 @@ function addMenuItem() {
 }
 
 function addRestaurant() {
-  const name = document.getElementById("res-name").value.trim();
-  const cuisine = document.getElementById("res-cuisine").value.trim();
+  const name = document.getElementById('res-name').value.trim();
+  const cuisine = document.getElementById('res-cuisine').value.trim();
   
-  const menuItems = [];
+  // Collect menu items
+  const menu = [];
   document.querySelectorAll('.menu-item-input').forEach(item => {
     const name = item.querySelector('.menu-item-name').value.trim();
     const price = parseFloat(item.querySelector('.menu-item-price').value);
     if (name && !isNaN(price)) {
-      menuItems.push({ name, price });
+      menu.push({ name, price });
     }
   });
-  
-  const image = selectedImageBase64 || "assets/placeholder.png";
 
-  if (!name || !cuisine || menuItems.length === 0 || !image) {
-    showToast("Please fill in all fields");
+  // Validate
+  if (!name || !cuisine || menu.length === 0 || !selectedImageBase64) {
+    showToast('Please fill in all fields');
     return;
   }
 
-  let stored = JSON.parse(localStorage.getItem("restaurants") || "[]");
-  stored.push({ name, cuisine, menu: menuItems, image });
-  localStorage.setItem("restaurants", JSON.stringify(stored));
+  // Save restaurant
+  const savedRestaurants = JSON.parse(localStorage.getItem('restaurants')) || [];
+  savedRestaurants.push({
+    name,
+    cuisine,
+    menu,
+    image: selectedImageBase64
+  });
+  localStorage.setItem('restaurants', JSON.stringify(savedRestaurants));
 
   // Reset form
-  document.getElementById("res-name").value = "";
-  document.getElementById("res-cuisine").value = "";
-  document.getElementById("menu-items-container").innerHTML = `
+  document.getElementById('res-name').value = '';
+  document.getElementById('res-cuisine').value = '';
+  document.getElementById('menu-items-container').innerHTML = `
     <div class="menu-item-input">
       <input type="text" class="menu-item-name" placeholder="Item Name">
       <input type="number" class="menu-item-price" placeholder="Price" min="0" step="0.01">
       <button class="remove-item-btn">×</button>
     </div>
   `;
-  document.getElementById("res-image-file").value = "";
-  document.getElementById("image-preview").src = "";
-  document.getElementById("image-preview").style.display = "none";
-  selectedImageBase64 = "";
+  document.getElementById('res-image-file').value = '';
+  document.getElementById('image-preview').src = '';
+  selectedImageBase64 = '';
 
-  document.getElementById("admin-msg").textContent = "Restaurant added successfully!";
+  showToast('Restaurant added successfully!');
   loadRestaurants();
-  showToast("New restaurant added");
+  showView('home');
 }
 
-function deleteRestaurant(index) {
-  const saved = JSON.parse(localStorage.getItem("restaurants") || "[]");
-  if (index >= defaultRestaurants.length) {
-    const adminIndex = index - defaultRestaurants.length;
-    saved.splice(adminIndex, 1);
-    localStorage.setItem("restaurants", JSON.stringify(saved));
-    loadRestaurants();
-    showToast("Restaurant deleted.");
-  } else {
-    showToast("Cannot delete default restaurants.");
+function handleImageUpload(e) {
+  const file = e.target.files[0];
+  const preview = document.getElementById('image-preview');
+  
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      selectedImageBase64 = event.target.result;
+      preview.src = selectedImageBase64;
+    };
+    reader.readAsDataURL(file);
   }
 }
 
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.classList.remove("hidden");
-  toast.classList.add("show");
+// Payment Functions
+function showPayment() {
+  if (cart.length === 0) {
+    showToast('Your cart is empty!');
+    return;
+  }
+  showView('payment');
+}
 
+function selectPaymentMethod(e) {
+  const method = e.currentTarget;
+  document.querySelectorAll('.payment-method').forEach(m => {
+    m.classList.remove('selected');
+  });
+  method.classList.add('selected');
+  
+  // Show corresponding payment form
+  document.querySelectorAll('.payment-form').forEach(form => {
+    form.classList.add('hidden');
+  });
+  document.getElementById(`${method.dataset.method}-payment`).classList.remove('hidden');
+}
+
+function processPayment() {
+  const selectedMethod = document.querySelector('.payment-method.selected').dataset.method;
+  
+  if (selectedMethod === 'card') {
+    // Validate card details
+    const cardNumber = document.getElementById('card-number').value;
+    const cardName = document.getElementById('card-name').value;
+    const cardExpiry = document.getElementById('card-expiry').value;
+    const cardCvv = document.getElementById('card-cvv').value;
+    
+    if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
+      showToast('Please fill all card details');
+      return;
+    }
+  }
+  
+  // Process payment
+  showToast(`Processing ${selectedMethod} payment...`);
+  
+  // Simulate payment processing
   setTimeout(() => {
-    toast.classList.remove("show");
-    toast.classList.add("hidden");
+    // Clear cart
+    cart = [];
+    saveCart();
+    updateCartCount();
+    
+    // Show success and return home
+    showToast('Payment successful! Order placed.');
+    showView('home');
+  }, 2000);
+}
+
+// Login Functions
+function flipCard() {
+  document.querySelector('.flip-card').classList.toggle('flipped');
+}
+
+function socialLogin(provider) {
+  showToast(`Logging in with ${provider}...`);
+  setTimeout(() => {
+    userRole = 'customer';
+    hideModal('login-modal');
+    showToast('Logged in successfully!');
+  }, 1000);
+}
+
+function ownerLogin() {
+  const username = document.getElementById('owner-username').value;
+  const password = document.getElementById('owner-password').value;
+  
+  if (username === 'admin' && password === 'admin123') {
+    userRole = 'owner';
+    hideModal('login-modal');
+    showToast('Logged in as restaurant owner');
+  } else {
+    document.getElementById('login-error').textContent = 'Invalid credentials';
+  }
+}
+
+// UI Helpers
+function toggleMobileNav() {
+  nav.classList.toggle('active');
+}
+
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add('show');
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
   }, 3000);
 }
+
+// Initialize the app
+document.addEventListener('DOMContentLoaded', init);
