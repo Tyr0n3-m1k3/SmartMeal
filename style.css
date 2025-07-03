@@ -1,8 +1,8 @@
 :root {
-  --primary: #D4AA7D; /* Buff - Secondary */
-  --highlight: #EFD09E; /* Sunset - Accent */
-  --bg-dark: #272727; /* Raisin Black - Dominant */
-  --card-bg: #1E1E1E; /* Slightly lighter than dominant */
+  --primary: #FFA500;
+  --highlight: #FFD700;
+  --bg-dark: #121212;
+  --card-bg: #1E1E1E;
   --text-light: #FFFFFF;
   --text-muted: #CCCCCC;
 }
@@ -60,7 +60,7 @@ main {
   background-color: var(--card-bg);
   color: var(--text-light);
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(212, 170, 125, 0.2); /* Buff with opacity */
+  box-shadow: 0 0 10px rgba(255, 165, 0, 0.2);
   padding: 1rem;
   transition: transform 0.3s ease;
   display: flex;
@@ -71,7 +71,7 @@ main {
 
 .restaurant:hover {
   transform: scale(1.03);
-  box-shadow: 0 0 15px var(--highlight); /* Sunset accent */
+  box-shadow: 0 0 15px var(--highlight);
 }
 
 .restaurant img {
@@ -80,11 +80,10 @@ main {
   object-fit: cover;
   border-radius: 8px;
   margin-bottom: 0.5rem;
-  border: 1px solid var(--primary); /* Buff border */
 }
 
 button {
-  background: var(--primary); /* Buff */
+  background: var(--primary);
   border: none;
   padding: 0.5rem 1rem;
   margin-top: 0.5rem;
@@ -92,11 +91,10 @@ button {
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
-  transition: background 0.3s ease;
 }
 
 button:hover {
-  background: var(--highlight); /* Sunset */
+  background: var(--highlight);
 }
 
 footer {
@@ -105,7 +103,6 @@ footer {
   text-align: center;
   padding: 1rem;
   margin-top: 2rem;
-  border-top: 1px solid var(--primary); /* Buff */
 }
 
 .modal {
@@ -125,7 +122,6 @@ footer {
   border-radius: 10px;
   width: 300px;
   max-width: 90vw;
-  border: 1px solid var(--primary); /* Buff */
 }
 
 input,
@@ -133,7 +129,7 @@ select {
   padding: 0.5rem;
   margin-top: 0.5rem;
   background: var(--card-bg);
-  border: 1px solid var(--highlight); /* Sunset */
+  border: 1px solid var(--highlight);
   color: var(--text-light);
   border-radius: 5px;
   width: 100%;
@@ -147,7 +143,7 @@ select {
   object-fit: cover;
   margin-top: 0.5rem;
   border-radius: 8px;
-  border: 1px solid var(--highlight); /* Sunset */
+  border: 1px solid var(--highlight);
   background-color: var(--card-bg);
 }
 
@@ -164,7 +160,7 @@ select {
   bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: var(--primary); /* Buff */
+  background-color: var(--primary);
   color: var(--bg-dark);
   padding: 1rem 2rem;
   border-radius: 5px;
@@ -190,7 +186,7 @@ select {
 }
 
 #cart-items button {
-  background: #A52A2A; /* Keeping red for delete actions */
+  background: crimson;
   color: white;
   border: none;
   margin-left: 1rem;
@@ -201,7 +197,7 @@ select {
 }
 
 #cart-items button:hover {
-  background: #8B0000; /* Darker red */
+  background: darkred;
 }
 
 /* Restaurant Detail View */
@@ -217,18 +213,16 @@ select {
   object-fit: cover;
   border-radius: 12px;
   margin-bottom: 1rem;
-  border: 2px solid var(--primary); /* Buff */
 }
 
 #restaurant-name {
   font-size: 2rem;
   margin-bottom: 0.2rem;
-  color: var(--primary); /* Buff */
 }
 
 #restaurant-cuisine {
   font-size: 1rem;
-  color: var(--highlight); /* Sunset */
+  color: var(--text-muted);
   margin-bottom: 1rem;
 }
 
@@ -240,7 +234,7 @@ select {
 
 .menu-item {
   background-color: var(--card-bg);
-  border: 1px solid var(--highlight); /* Sunset */
+  border: 1px solid var(--highlight);
   padding: 1rem;
   border-radius: 8px;
   display: flex;
