@@ -52,16 +52,6 @@ const defaultRestaurants = [
       { name: "Fried Rice", price: 300 },
       { name: "Spring Rolls", price: 250 }
     ]
-  },
-  {
-    name: "Burger Place",
-    cuisine: "American",
-    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60",
-    menu: [
-      { name: "Hamburger", price: 400 },
-      { name: "Cheeseburger", price: 450 },
-      { name: "Chicken Nuggets", price: 300 }
-    ]
   }
 ];
 
@@ -70,21 +60,29 @@ function init() {
   setupEventListeners();
   loadRestaurants();
   updateCartCount();
+  showView('home'); // Show home view by default
 }
 
 // Event Listeners
 function setupEventListeners() {
-  // Navigation
+  // Mobile Navigation Toggle
   menuToggle.addEventListener('click', toggleMobileNav);
+  
+  // Navigation Links
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       const view = e.target.getAttribute('data-view');
-      showView(view);
+      if (view === 'login') {
+        showModal('login-modal');
+      } else {
+        showView(view);
+      }
       if (nav.classList.contains('active')) toggleMobileNav();
     });
   });
 
+  // Back Buttons
   document.querySelectorAll('.back-button').forEach(button => {
     button.addEventListener('click', (e) => {
       e.preventDefault();
@@ -93,7 +91,7 @@ function setupEventListeners() {
     });
   });
 
-  // Search
+  // Search Functionality
   searchBar.addEventListener('input', (e) => {
     loadRestaurants(e.target.value);
   });
@@ -101,15 +99,18 @@ function setupEventListeners() {
   // Image Upload
   document.getElementById('res-image-file').addEventListener('change', handleImageUpload);
 
-  // Payment Methods
+  // Payment Method Selection
   document.querySelectorAll('.payment-method').forEach(method => {
     method.addEventListener('click', selectPaymentMethod);
   });
 
-  // Login Modal
+  // Close Modal Button
   document.querySelector('.close-modal').addEventListener('click', () => {
     hideModal('login-modal');
   });
+
+  // Flip Card Button
+  document.querySelector('.flip-btn').addEventListener('click', flipCard);
 }
 
 // View Management
@@ -125,10 +126,7 @@ function showView(viewName) {
   }
 
   // Special cases
-  if (viewName === 'login') {
-    showModal('login-modal');
-    showView('home');
-  } else if (viewName === 'cart') {
+  if (viewName === 'cart') {
     renderCart();
   }
 }
@@ -146,7 +144,6 @@ function loadRestaurants(filter = '') {
   const savedRestaurants = JSON.parse(localStorage.getItem('restaurants')) || [];
   const restaurants = [...defaultRestaurants, ...savedRestaurants];
   
-  // Filter restaurants
   const filtered = restaurants.filter(restaurant => {
     const searchTerm = filter.toLowerCase();
     return (
@@ -175,12 +172,6 @@ function renderRestaurants(restaurants) {
         <h3>${restaurant.name}</h3>
         <p>${restaurant.cuisine}</p>
         <button class="primary-btn" onclick="viewRestaurant(${index})">View Menu</button>
-        ${userRole === 'owner' && index >= defaultRestaurants.length ? `
-          <div class="admin-actions">
-            <button class="secondary-btn" onclick="editRestaurant(${index})">Edit</button>
-            <button class="danger-btn" onclick="deleteRestaurant(${index})">Delete</button>
-          </div>
-        ` : ''}
       </div>
     `;
     restaurantList.appendChild(card);
@@ -193,12 +184,10 @@ function viewRestaurant(index) {
   const restaurants = [...defaultRestaurants, ...savedRestaurants];
   const restaurant = restaurants[index];
 
-  // Update restaurant details
   document.getElementById('restaurant-name').textContent = restaurant.name;
   document.getElementById('restaurant-cuisine').textContent = restaurant.cuisine;
   document.getElementById('restaurant-cover').src = restaurant.image;
 
-  // Render menu
   const menuList = document.getElementById('restaurant-menu-list');
   menuList.innerHTML = '';
   
@@ -222,7 +211,6 @@ function viewRestaurant(index) {
 
 // Cart Functions
 function addToCart(restaurantIndex, item) {
-  // Add restaurant index to item for reference
   item.restaurantIndex = restaurantIndex;
   cart.push(item);
   saveCart();
@@ -235,7 +223,6 @@ function renderCart() {
   const cartTotal = document.getElementById('cart-total');
   cartItems.innerHTML = '';
 
-  // Group items by name and restaurant
   const itemGroups = {};
   cart.forEach(item => {
     const key = `${item.name}-${item.restaurantIndex}`;
@@ -245,7 +232,6 @@ function renderCart() {
     itemGroups[key].quantity += 1;
   });
 
-  // Calculate total and render items
   let total = 0;
   Object.values(itemGroups).forEach(group => {
     const subtotal = group.price * group.quantity;
@@ -268,7 +254,6 @@ function renderCart() {
 }
 
 function removeFromCart(name, restaurantIndex) {
-  // Find and remove the first matching item
   const index = cart.findIndex(item => 
     item.name === name && item.restaurantIndex === restaurantIndex
   );
@@ -290,6 +275,56 @@ function updateCartCount() {
   cartCount.textContent = cart.length;
 }
 
+// Payment Functions
+function showPayment() {
+  if (cart.length === 0) {
+    showToast('Your cart is empty!');
+    return;
+  }
+  showView('payment');
+  // Reset payment method selection
+  document.querySelector('.payment-method[data-method="card"]').click();
+}
+
+function selectPaymentMethod(e) {
+  const method = e.currentTarget;
+  document.querySelectorAll('.payment-method').forEach(m => {
+    m.classList.remove('selected');
+  });
+  method.classList.add('selected');
+  
+  document.querySelectorAll('.payment-form').forEach(form => {
+    form.classList.add('hidden');
+  });
+  document.getElementById(`${method.dataset.method}-payment`).classList.remove('hidden');
+}
+
+function processPayment() {
+  const selectedMethod = document.querySelector('.payment-method.selected').dataset.method;
+  
+  if (selectedMethod === 'card') {
+    const cardNumber = document.getElementById('card-number').value;
+    const cardName = document.getElementById('card-name').value;
+    const cardExpiry = document.getElementById('card-expiry').value;
+    const cardCvv = document.getElementById('card-cvv').value;
+    
+    if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
+      showToast('Please fill all card details');
+      return;
+    }
+  }
+  
+  showToast(`Processing ${selectedMethod} payment...`);
+  
+  setTimeout(() => {
+    cart = [];
+    saveCart();
+    updateCartCount();
+    showToast('Payment successful! Order placed.');
+    showView('home');
+  }, 2000);
+}
+
 // Admin Functions
 function addMenuItem() {
   const container = document.getElementById('menu-items-container');
@@ -307,7 +342,6 @@ function addRestaurant() {
   const name = document.getElementById('res-name').value.trim();
   const cuisine = document.getElementById('res-cuisine').value.trim();
   
-  // Collect menu items
   const menu = [];
   document.querySelectorAll('.menu-item-input').forEach(item => {
     const name = item.querySelector('.menu-item-name').value.trim();
@@ -317,13 +351,11 @@ function addRestaurant() {
     }
   });
 
-  // Validate
   if (!name || !cuisine || menu.length === 0 || !selectedImageBase64) {
     showToast('Please fill in all fields');
     return;
   }
 
-  // Save restaurant
   const savedRestaurants = JSON.parse(localStorage.getItem('restaurants')) || [];
   savedRestaurants.push({
     name,
@@ -366,61 +398,6 @@ function handleImageUpload(e) {
   }
 }
 
-// Payment Functions
-function showPayment() {
-  if (cart.length === 0) {
-    showToast('Your cart is empty!');
-    return;
-  }
-  showView('payment');
-}
-
-function selectPaymentMethod(e) {
-  const method = e.currentTarget;
-  document.querySelectorAll('.payment-method').forEach(m => {
-    m.classList.remove('selected');
-  });
-  method.classList.add('selected');
-  
-  // Show corresponding payment form
-  document.querySelectorAll('.payment-form').forEach(form => {
-    form.classList.add('hidden');
-  });
-  document.getElementById(`${method.dataset.method}-payment`).classList.remove('hidden');
-}
-
-function processPayment() {
-  const selectedMethod = document.querySelector('.payment-method.selected').dataset.method;
-  
-  if (selectedMethod === 'card') {
-    // Validate card details
-    const cardNumber = document.getElementById('card-number').value;
-    const cardName = document.getElementById('card-name').value;
-    const cardExpiry = document.getElementById('card-expiry').value;
-    const cardCvv = document.getElementById('card-cvv').value;
-    
-    if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
-      showToast('Please fill all card details');
-      return;
-    }
-  }
-  
-  // Process payment
-  showToast(`Processing ${selectedMethod} payment...`);
-  
-  // Simulate payment processing
-  setTimeout(() => {
-    // Clear cart
-    cart = [];
-    saveCart();
-    updateCartCount();
-    
-    // Show success and return home
-    showToast('Payment successful! Order placed.');
-    showView('home');
-  }, 2000);
-}
-
 // Login Functions
 function flipCard() {
   document.querySelector('.flip-card').classList.toggle('flipped');
@@ -443,6 +420,7 @@ function ownerLogin() {
     userRole = 'owner';
     hideModal('login-modal');
     showToast('Logged in as restaurant owner');
+    showView('admin');
   } else {
     document.getElementById('login-error').textContent = 'Invalid credentials';
   }
@@ -451,6 +429,7 @@ function ownerLogin() {
 // UI Helpers
 function toggleMobileNav() {
   nav.classList.toggle('active');
+  document.body.classList.toggle('nav-active');
 }
 
 function showToast(message) {
