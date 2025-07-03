@@ -5,14 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SmartMeal</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     .toast {
       position: fixed;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background-color: #333;
-      color: white;
+      background-color: #D4AA7D;
+      color: #272727;
       padding: 12px 20px;
       border-radius: 6px;
       z-index: 1000;
@@ -24,6 +25,63 @@
     }
     .hidden {
       display: none;
+    }
+    .flip-card {
+      perspective: 1000px;
+      width: 300px;
+      height: 400px;
+    }
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+    .flip-card.flipped .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+    .flip-card-front, .flip-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      padding: 20px;
+      border-radius: 10px;
+      background: #1E1E1E;
+    }
+    .flip-card-back {
+      transform: rotateY(180deg);
+    }
+    .social-login {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .google-btn {
+      background: #4285F4;
+      color: white;
+    }
+    .apple-btn {
+      background: #000;
+      color: white;
+    }
+    .flip-trigger {
+      color: #EFD09E;
+      text-decoration: underline;
+      cursor: pointer;
+      margin-top: 15px;
+      display: inline-block;
     }
   </style>
 </head>
@@ -49,7 +107,7 @@
     <section id="restaurant-view" class="hidden">
       <button onclick="showHome()">← Back to Restaurants</button>
       <div id="restaurant-details">
-        <img id="restaurant-cover" alt="Restaurant Cover" style="max-width: 100%; border-radius: 8px;" />
+        <img id="restaurant-cover" alt="Restaurant Cover" />
         <h2 id="restaurant-name"></h2>
         <p id="restaurant-cuisine"></p>
         <h3>Menu</h3>
@@ -62,12 +120,47 @@
       <h2>Add / Edit Restaurant</h2>
       <input type="text" id="res-name" placeholder="Restaurant Name" /><br />
       <input type="text" id="res-cuisine" placeholder="Cuisine" /><br />
-      <input type="text" id="res-menu" placeholder="Menu (comma-separated)" /><br />
+      <div id="menu-items-container">
+        <div class="menu-item-input">
+          <input type="text" class="menu-item-name" placeholder="Item Name">
+          <input type="number" class="menu-item-price" placeholder="Price" min="0" step="0.01">
+          <button class="remove-item-btn">×</button>
+        </div>
+      </div>
+      <button onclick="addMenuItem()">Add Menu Item</button><br />
       <label for="res-image-file">Cover Image</label>
       <input type="file" id="res-image-file" accept="image/*" />
-      <img id="image-preview" src="" alt="Image Preview" style="margin-top: 1rem; max-width: 100%; border-radius: 8px; display: none;" />
+      <img id="image-preview" src="" alt="Image Preview" />
       <button onclick="addRestaurant()">Add Restaurant</button>
-      <p id="admin-msg" style="color: green;"></p>
+      <p id="admin-msg"></p>
+    </section>
+
+    <!-- Payment View -->
+    <section id="payment-view" class="hidden">
+      <button onclick="viewCart()">← Back to Cart</button>
+      <h2>Payment Method</h2>
+      <div class="payment-methods">
+        <div class="payment-method selected" data-method="card">
+          <i class="far fa-credit-card"></i>
+          <span>Credit/Debit Card</span>
+        </div>
+        <div class="payment-method" data-method="paypal">
+          <i class="fab fa-cc-paypal"></i>
+          <span>PayPal</span>
+        </div>
+      </div>
+      <div id="card-payment" class="payment-form">
+        <input type="text" id="card-number" placeholder="Card Number" />
+        <input type="text" id="card-name" placeholder="Name on Card" />
+        <div class="card-details">
+          <input type="text" id="card-expiry" placeholder="MM/YY" />
+          <input type="text" id="card-cvv" placeholder="CVV" />
+        </div>
+      </div>
+      <div id="paypal-payment" class="payment-form hidden">
+        <p>You will be redirected to PayPal to complete your payment</p>
+      </div>
+      <button onclick="processPayment()">Complete Payment</button>
     </section>
   </main>
 
@@ -78,22 +171,39 @@
       <ul id="cart-items"></ul>
       <p><strong>Total:</strong> $<span id="cart-total">0.00</span></p>
       <button onclick="closeCart()">Close</button>
-      <button onclick="placeOrder()">Place Order</button>
+      <button onclick="showPayment()">Place Order</button>
     </div>
   </div>
 
   <!-- Login Modal -->
   <div id="login-modal" class="modal hidden">
     <div class="modal-content">
-      <h2>Login</h2>
-      <select id="login-role">
-        <option value="customer">Customer</option>
-        <option value="owner">Restaurant Owner</option>
-      </select>
-      <input type="text" id="login-username" placeholder="Username" />
-      <input type="password" id="login-password" placeholder="Password" />
-      <button onclick="handleLogin()">Login</button>
-      <p id="login-error" style="color: red;"></p>
+      <div class="flip-card">
+        <div class="flip-card-inner">
+          <div class="flip-card-front">
+            <h2>Customer Login</h2>
+            <div class="social-login">
+              <div class="social-btn google-btn" onclick="socialLogin('google')">
+                <i class="fab fa-google"></i>
+                <span>Login with Google</span>
+              </div>
+              <div class="social-btn apple-btn" onclick="socialLogin('apple')">
+                <i class="fab fa-apple"></i>
+                <span>Login with Apple</span>
+              </div>
+            </div>
+            <span class="flip-trigger" onclick="flipCard()">Restaurant Owner? Login Here</span>
+          </div>
+          <div class="flip-card-back">
+            <h2>Owner Login</h2>
+            <input type="text" id="owner-username" placeholder="Username" />
+            <input type="password" id="owner-password" placeholder="Password" />
+            <button onclick="ownerLogin()">Login</button>
+            <span class="flip-trigger" onclick="flipCard()">Customer? Login Here</span>
+          </div>
+        </div>
+      </div>
+      <p id="login-error"></p>
     </div>
   </div>
 
