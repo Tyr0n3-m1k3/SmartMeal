@@ -1,6 +1,7 @@
 let cart = JSON.parse(localStorage.getItem("cart") || "[]");
-let userRole = null; // "customer" or "owner"
+let userRole = null;
 let selectedImageBase64 = "";
+let currentRestaurantIndex = null;
 
 const defaultRestaurants = [
   {
@@ -32,87 +33,92 @@ const defaultRestaurants = [
       { name: "Fried Rice", price: 300 },
       { name: "Spring Rolls", price: 250 }
     ]
-  },
-  {
-    name: "Burger Place",
-    cuisine: "American",
-    image: "assets/burger.png",
-    menu: [
-      { name: "Hamburger", price: 400 },
-      { name: "Cheeseburger", price: 450 },
-      { name: "Chicken Nuggets", price: 300 }
-    ]
-  },
-  {
-    name: "Shake Joint",
-    cuisine: "Global",
-    image: "assets/shake.png",
-    menu: [
-      { name: "Chocolate", price: 200 },
-      { name: "Strawberry", price: 200 },
-      { name: "Vanilla", price: 180 }
-    ]
-  },
-  {
-    name: "Sushi Palace",
-    cuisine: "Seafood",
-    image: "assets/sushi.png",
-    menu: [
-      { name: "Crab", price: 600 },
-      { name: "Shrimp", price: 650 },
-      { name: "Sushi", price: 700 }
-    ]
   }
 ];
 
-document.getElementById("menu-toggle")?.addEventListener("click", () => {
-  document.querySelector("nav").classList.toggle("show");
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("menu-toggle")?.addEventListener("click", () => {
+    document.querySelector("nav").classList.toggle("show");
+  });
+
+  document.getElementById("search-bar")?.addEventListener("input", (e) => {
+    loadRestaurants(e.target.value);
+  });
+
+  document.getElementById("res-image-file")?.addEventListener("change", function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById("image-preview");
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        selectedImageBase64 = evt.target.result;
+        preview.src = selectedImageBase64;
+        preview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Payment method selection
+  document.querySelectorAll('.payment-method').forEach(method => {
+    method.addEventListener('click', function() {
+      document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+      this.classList.add('selected');
+      document.querySelectorAll('.payment-form').forEach(form => form.classList.add('hidden'));
+      document.getElementById(`${this.dataset.method}-payment`).classList.remove('hidden');
+    });
+  });
+
+  loadRestaurants();
+  document.getElementById("cart-count").textContent = cart.length;
 });
+
+function flipCard() {
+  document.querySelector('.flip-card').classList.toggle('flipped');
+}
+
+function socialLogin(provider) {
+  showToast(`Logging in with ${provider.charAt(0).toUpperCase() + provider.slice(1)}...`);
+  setTimeout(() => {
+    userRole = "customer";
+    showHome();
+    showToast("Logged in successfully!");
+    document.getElementById("login-modal").classList.add("hidden");
+  }, 1000);
+}
+
+function ownerLogin() {
+  const username = document.getElementById("owner-username").value;
+  const password = document.getElementById("owner-password").value;
+  
+  if (username === "admin" && password === "admin123") {
+    userRole = "owner";
+    showAdminPanel();
+    showToast("Logged in as Restaurant Owner");
+    document.getElementById("login-modal").classList.add("hidden");
+  } else {
+    document.getElementById("login-error").textContent = "Invalid owner credentials.";
+  }
+}
 
 function toggleLogin() {
   document.getElementById("login-modal").classList.remove("hidden");
-}
-
-function handleLogin() {
-  const role = document.getElementById("login-role").value;
-  const username = document.getElementById("login-username").value;
-  const password = document.getElementById("login-password").value;
-  const errorField = document.getElementById("login-error");
-
-  if (role === "owner") {
-    if (username === "admin" && password === "admin123") {
-      userRole = "owner";
-      showAdminPanel();
-      showToast("Logged in as Restaurant Owner");
-    } else {
-      errorField.textContent = "Invalid owner credentials.";
-      return;
-    }
-  } else if (role === "customer") {
-    if (username.trim() && password.trim()) {
-      userRole = "customer";
-      showHome();
-      showToast("Logged in as Customer");
-    } else {
-      errorField.textContent = "Enter a valid username and password.";
-      return;
-    }
-  }
-
-  document.getElementById("login-modal").classList.add("hidden");
-  loadRestaurants();
+  document.querySelector('.flip-card').classList.remove('flipped');
 }
 
 function showHome() {
   document.getElementById("home-view").classList.remove("hidden");
   document.getElementById("restaurant-view").classList.add("hidden");
   document.getElementById("admin-panel").classList.add("hidden");
+  document.getElementById("payment-view").classList.add("hidden");
 }
 
 function showAdminPanel() {
   document.getElementById("home-view").classList.add("hidden");
   document.getElementById("restaurant-view").classList.add("hidden");
   document.getElementById("admin-panel").classList.remove("hidden");
+  document.getElementById("payment-view").classList.add("hidden");
+  document.getElementById("admin-msg").textContent = "";
 }
 
 function loadRestaurants(filter = "") {
@@ -129,13 +135,11 @@ function loadRestaurants(filter = "") {
     .forEach((res, index) => {
       const div = document.createElement("div");
       div.className = "restaurant";
-      const menuNames = res.menu.map(item => (typeof item === "string" ? item : item.name));
       div.innerHTML = `
         <img src="${res.image}" alt="${res.name}" />
         <h2>${res.name}</h2>
         <p><strong>Cuisine:</strong> ${res.cuisine}</p>
-        <p><strong>Menu:</strong> ${menuNames.join(", ")}</p>
-        <button onclick="viewRestaurant(${index})">Order from ${res.name}</button>
+        <button onclick="viewRestaurant(${index})">View Menu</button>
         ${
           userRole === "owner" && index >= defaultRestaurants.length
             ? `<button onclick="editRestaurant(${index})">Edit</button>
@@ -148,40 +152,45 @@ function loadRestaurants(filter = "") {
 }
 
 function viewRestaurant(index) {
+  currentRestaurantIndex = index;
   const savedRestaurants = JSON.parse(localStorage.getItem("restaurants") || "[]");
   const restaurants = [...defaultRestaurants, ...savedRestaurants];
   const restaurant = restaurants[index];
-
-  const formattedMenu = restaurant.menu.map(item =>
-    typeof item === "string" ? { name: item, price: 100 } : item
-  );
 
   document.getElementById("home-view").classList.add("hidden");
   document.getElementById("admin-panel").classList.add("hidden");
   document.getElementById("restaurant-view").classList.remove("hidden");
 
-  document.getElementById("restaurant-cover").src = restaurant.image;
+  const coverImg = document.getElementById("restaurant-cover");
+  coverImg.src = restaurant.image;
+  coverImg.onload = function() {
+    // Ensure image fits properly
+    this.style.objectFit = "contain";
+    this.style.maxHeight = "250px";
+    this.style.width = "100%";
+  };
+
   document.getElementById("restaurant-name").textContent = restaurant.name;
   document.getElementById("restaurant-cuisine").textContent = `Cuisine: ${restaurant.cuisine}`;
 
   const menuList = document.getElementById("restaurant-menu-list");
   menuList.innerHTML = "";
 
-  formattedMenu.forEach(item => {
-    const itemStr = encodeURIComponent(JSON.stringify(item));
+  restaurant.menu.forEach(item => {
     const div = document.createElement("div");
     div.className = "menu-item";
     div.innerHTML = `
-      <p><strong>${item.name}</strong> - $${item.price}</p>
-      <button onclick="addItemToCart('${itemStr}')">Add to Cart</button>
+      <p><strong>${item.name}</strong> - $${item.price.toFixed(2)}</p>
+      <button onclick="addItemToCart(${index}, '${encodeURIComponent(JSON.stringify(item))}')">Add to Cart</button>
     `;
     menuList.appendChild(div);
   });
 }
 
-function addItemToCart(encodedItemStr) {
+function addItemToCart(restaurantIndex, encodedItemStr) {
   try {
     const item = JSON.parse(decodeURIComponent(encodedItemStr));
+    item.restaurantIndex = restaurantIndex;
     cart.push(item);
     localStorage.setItem("cart", JSON.stringify(cart));
     document.getElementById("cart-count").textContent = cart.length;
@@ -199,7 +208,7 @@ function viewCart() {
 
   const itemMap = {};
   cart.forEach(item => {
-    const key = item.name;
+    const key = item.name + item.restaurantIndex;
     if (!itemMap[key]) {
       itemMap[key] = { ...item, quantity: 0 };
     }
@@ -208,14 +217,14 @@ function viewCart() {
 
   let total = 0;
 
-  Object.values(itemMap).forEach(({ name, price, quantity }) => {
+  Object.values(itemMap).forEach(({ name, price, quantity, restaurantIndex }) => {
     const subtotal = price * quantity;
     total += subtotal;
 
     const li = document.createElement("li");
     li.innerHTML = `
-      ${name} x${quantity} - $${subtotal}
-      <button onclick="removeFromCartByName('${name}')">Remove</button>
+      ${name} x${quantity} - $${subtotal.toFixed(2)}
+      <button onclick="removeFromCart('${name}', ${restaurantIndex})">Remove</button>
     `;
     cartList.appendChild(li);
   });
@@ -224,8 +233,8 @@ function viewCart() {
   document.getElementById("cart-modal").classList.remove("hidden");
 }
 
-function removeFromCartByName(name) {
-  const index = cart.findIndex(item => item.name === name);
+function removeFromCart(name, restaurantIndex) {
+  const index = cart.findIndex(item => item.name === name && item.restaurantIndex === restaurantIndex);
   if (index !== -1) cart.splice(index, 1);
   localStorage.setItem("cart", JSON.stringify(cart));
   document.getElementById("cart-count").textContent = cart.length;
@@ -237,39 +246,86 @@ function closeCart() {
   document.getElementById("cart-modal").classList.add("hidden");
 }
 
-function placeOrder() {
+function showPayment() {
   if (cart.length === 0) {
     showToast("Your cart is empty!");
     return;
   }
-  cart = [];
-  localStorage.removeItem("cart");
-  document.getElementById("cart-count").textContent = "0";
-  closeCart();
-  showToast("Order placed successfully!");
+  document.getElementById("cart-modal").classList.add("hidden");
+  document.getElementById("payment-view").classList.remove("hidden");
+}
+
+function processPayment() {
+  const selectedMethod = document.querySelector('.payment-method.selected').dataset.method;
+  
+  if (selectedMethod === 'card') {
+    const cardNumber = document.getElementById('card-number').value;
+    const cardName = document.getElementById('card-name').value;
+    const cardExpiry = document.getElementById('card-expiry').value;
+    const cardCvv = document.getElementById('card-cvv').value;
+    
+    if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
+      showToast('Please fill all card details');
+      return;
+    }
+  }
+  
+  showToast(`Processing ${selectedMethod} payment...`);
+  setTimeout(() => {
+    cart = [];
+    localStorage.removeItem("cart");
+    document.getElementById("cart-count").textContent = "0";
+    showToast("Payment successful! Order placed.");
+    showHome();
+  }, 2000);
+}
+
+function addMenuItem() {
+  const container = document.getElementById('menu-items-container');
+  const newItem = document.createElement('div');
+  newItem.className = 'menu-item-input';
+  newItem.innerHTML = `
+    <input type="text" class="menu-item-name" placeholder="Item Name">
+    <input type="number" class="menu-item-price" placeholder="Price" min="0" step="0.01">
+    <button class="remove-item-btn" onclick="this.parentElement.remove()">×</button>
+  `;
+  container.appendChild(newItem);
 }
 
 function addRestaurant() {
   const name = document.getElementById("res-name").value.trim();
   const cuisine = document.getElementById("res-cuisine").value.trim();
-  const menu = document.getElementById("res-menu").value.split(",").map(item => ({
-    name: item.trim(),
-    price: 100
-  }));
+  
+  const menuItems = [];
+  document.querySelectorAll('.menu-item-input').forEach(item => {
+    const name = item.querySelector('.menu-item-name').value.trim();
+    const price = parseFloat(item.querySelector('.menu-item-price').value);
+    if (name && !isNaN(price)) {
+      menuItems.push({ name, price });
+    }
+  });
+  
   const image = selectedImageBase64 || "assets/placeholder.png";
 
-  if (!name || !cuisine || !menu.length || !image) {
+  if (!name || !cuisine || menuItems.length === 0 || !image) {
     showToast("Please fill in all fields");
     return;
   }
 
   let stored = JSON.parse(localStorage.getItem("restaurants") || "[]");
-  stored.push({ name, cuisine, menu, image });
+  stored.push({ name, cuisine, menu: menuItems, image });
   localStorage.setItem("restaurants", JSON.stringify(stored));
 
+  // Reset form
   document.getElementById("res-name").value = "";
   document.getElementById("res-cuisine").value = "";
-  document.getElementById("res-menu").value = "";
+  document.getElementById("menu-items-container").innerHTML = `
+    <div class="menu-item-input">
+      <input type="text" class="menu-item-name" placeholder="Item Name">
+      <input type="number" class="menu-item-price" placeholder="Price" min="0" step="0.01">
+      <button class="remove-item-btn">×</button>
+    </div>
+  `;
   document.getElementById("res-image-file").value = "";
   document.getElementById("image-preview").src = "";
   document.getElementById("image-preview").style.display = "none";
@@ -293,58 +349,6 @@ function deleteRestaurant(index) {
   }
 }
 
-function editRestaurant(index) {
-  const allRestaurants = [...defaultRestaurants, ...JSON.parse(localStorage.getItem("restaurants") || "[]")];
-  const res = allRestaurants[index];
-  if (index < defaultRestaurants.length) {
-    showToast("Cannot edit default restaurants.");
-    return;
-  }
-
-  const adminIndex = index - defaultRestaurants.length;
-
-  document.getElementById("res-name").value = res.name;
-  document.getElementById("res-cuisine").value = res.cuisine;
-  document.getElementById("res-menu").value = res.menu.map(m => m.name).join(", ");
-  document.getElementById("image-preview").src = res.image;
-  document.getElementById("image-preview").style.display = "block";
-  selectedImageBase64 = res.image;
-
-  showAdminPanel();
-  document.getElementById("admin-msg").textContent = "Edit mode: Updating restaurant...";
-
-  const oldButton = document.querySelector('#admin-panel button[onclick="addRestaurant()"]');
-  oldButton.textContent = "Update Restaurant";
-  oldButton.onclick = function () {
-    const name = document.getElementById("res-name").value.trim();
-    const cuisine = document.getElementById("res-cuisine").value.trim();
-    const menu = document.getElementById("res-menu").value.split(",").map(item => ({
-      name: item.trim(),
-      price: 100
-    }));
-    const image = selectedImageBase64 || "assets/placeholder.png";
-
-    const stored = JSON.parse(localStorage.getItem("restaurants") || "[]");
-    stored[adminIndex] = { name, cuisine, menu, image };
-    localStorage.setItem("restaurants", JSON.stringify(stored));
-
-    showToast("Restaurant updated!");
-    document.getElementById("admin-msg").textContent = "";
-    loadRestaurants();
-
-    oldButton.textContent = "Add Restaurant";
-    oldButton.setAttribute("onclick", "addRestaurant()");
-
-    document.getElementById("res-name").value = "";
-    document.getElementById("res-cuisine").value = "";
-    document.getElementById("res-menu").value = "";
-    document.getElementById("res-image-file").value = "";
-    document.getElementById("image-preview").src = "";
-    document.getElementById("image-preview").style.display = "none";
-    selectedImageBase64 = "";
-  };
-}
-
 function showToast(message) {
   const toast = document.getElementById("toast");
   toast.textContent = message;
@@ -356,33 +360,3 @@ function showToast(message) {
     toast.classList.add("hidden");
   }, 3000);
 }
-
-document.getElementById("search-bar")?.addEventListener("input", (e) => {
-  loadRestaurants(e.target.value);
-});
-
-document.getElementById("res-image-file")?.addEventListener("change", function (e) {
-  const file = e.target.files[0];
-  const preview = document.getElementById("image-preview");
-
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function (evt) {
-      selectedImageBase64 = evt.target.result;
-      preview.src = selectedImageBase64;
-      preview.style.display = "block";
-    };
-    reader.readAsDataURL(file);
-  } else {
-    selectedImageBase64 = "";
-    preview.src = "";
-    preview.style.display = "none";
-  }
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  if (document.getElementById("restaurant-list")) {
-    loadRestaurants();
-    document.getElementById("cart-count").textContent = cart.length;
-  }
-});
