@@ -20,6 +20,7 @@ let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let userRole = null;
 let selectedImageBase64 = '';
 let currentRestaurantIndex = null;
+let currentUser = null;
 
 // Sample Data
 const defaultRestaurants = [
@@ -60,7 +61,58 @@ function init() {
   setupEventListeners();
   loadRestaurants();
   updateCartCount();
-  showView('home'); // Show home view by default
+  showView('home');
+  checkLoginStatus();
+}
+
+// Check if user is logged in
+function checkLoginStatus() {
+  const user = JSON.parse(localStorage.getItem('currentUser'));
+  if (user) {
+    currentUser = user;
+    userRole = user.role;
+    updateNavForLoggedInUser();
+  }
+}
+
+// Update navigation for logged in users
+function updateNavForLoggedInUser() {
+  const navList = document.querySelector('.nav-list');
+  
+  // Remove existing profile link if any
+  const existingProfile = document.querySelector('.nav-profile');
+  if (existingProfile) {
+    existingProfile.remove();
+  }
+  
+  if (currentUser) {
+    const profileItem = document.createElement('li');
+    profileItem.className = 'nav-profile';
+    
+    if (userRole === 'owner') {
+      profileItem.innerHTML = `
+        <a href="#" class="nav-link" data-view="admin">
+          <i class="fas fa-user-circle"></i> Manage Restaurant
+        </a>
+      `;
+    } else {
+      profileItem.innerHTML = `
+        <a href="#" class="nav-link" data-view="profile">
+          <i class="fas fa-user-circle"></i> My Account
+        </a>
+      `;
+    }
+    
+    navList.appendChild(profileItem);
+    
+    // Replace login with logout
+    const loginItem = document.querySelector('[data-view="login"]').parentElement;
+    loginItem.innerHTML = `
+      <a href="#" class="nav-link" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
+    `;
+  }
 }
 
 // Event Listeners
@@ -110,7 +162,9 @@ function setupEventListeners() {
   });
 
   // Flip Card Button
-  document.querySelector('.flip-btn').addEventListener('click', flipCard);
+  document.querySelectorAll('.flip-btn').forEach(btn => {
+    btn.addEventListener('click', flipCard);
+  });
 }
 
 // View Management
@@ -296,7 +350,13 @@ function selectPaymentMethod(e) {
   document.querySelectorAll('.payment-form').forEach(form => {
     form.classList.add('hidden');
   });
-  document.getElementById(`${method.dataset.method}-payment`).classList.remove('hidden');
+  
+  const paymentForm = document.getElementById(`${method.dataset.method}-payment`);
+  paymentForm.classList.remove('hidden');
+  
+  if (method.dataset.method === 'paypal') {
+    showToast('You will be redirected to PayPal to complete your payment');
+  }
 }
 
 function processPayment() {
@@ -312,17 +372,25 @@ function processPayment() {
       showToast('Please fill all card details');
       return;
     }
+    
+    // Process card payment
+    showToast(`Processing card payment...`);
+    setTimeout(() => {
+      completePayment();
+    }, 2000);
+  } else if (selectedMethod === 'paypal') {
+    // Redirect to PayPal
+    window.location.href = "https://www.paypal.com/checkoutnow";
+    return;
   }
-  
-  showToast(`Processing ${selectedMethod} payment...`);
-  
-  setTimeout(() => {
-    cart = [];
-    saveCart();
-    updateCartCount();
-    showToast('Payment successful! Order placed.');
-    showView('home');
-  }, 2000);
+}
+
+function completePayment() {
+  cart = [];
+  saveCart();
+  updateCartCount();
+  showToast('Payment successful! Order placed.');
+  showView('home');
 }
 
 // Admin Functions
@@ -400,16 +468,31 @@ function handleImageUpload(e) {
 
 // Login Functions
 function flipCard() {
-  document.querySelector('.flip-card').classList.toggle('flipped');
+  const flipCard = document.querySelector('.flip-card');
+  flipCard.classList.toggle('flipped');
 }
 
 function socialLogin(provider) {
   showToast(`Logging in with ${provider}...`);
+  
+  // Simulate social login
   setTimeout(() => {
+    currentUser = {
+      name: "Social User",
+      email: `user@${provider}.com`,
+      role: "customer",
+      provider: provider
+    };
+    
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
     userRole = 'customer';
     hideModal('login-modal');
+    updateNavForLoggedInUser();
     showToast('Logged in successfully!');
-  }, 1000);
+    
+    // Redirect to profile page
+    showView('profile');
+  }, 1500);
 }
 
 function ownerLogin() {
@@ -417,13 +500,30 @@ function ownerLogin() {
   const password = document.getElementById('owner-password').value;
   
   if (username === 'admin' && password === 'admin123') {
+    currentUser = {
+      name: "Restaurant Owner",
+      email: "owner@smartmeal.com",
+      role: "owner"
+    };
+    
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
     userRole = 'owner';
     hideModal('login-modal');
+    updateNavForLoggedInUser();
     showToast('Logged in as restaurant owner');
     showView('admin');
   } else {
     document.getElementById('login-error').textContent = 'Invalid credentials';
   }
+}
+
+function logout() {
+  currentUser = null;
+  userRole = null;
+  localStorage.removeItem('currentUser');
+  updateNavForLoggedInUser();
+  showToast('Logged out successfully');
+  showView('home');
 }
 
 // UI Helpers
