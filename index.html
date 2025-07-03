@@ -19,7 +19,8 @@
         <ul class="nav-list">
           <li><a href="#" class="nav-link" data-view="home">Home</a></li>
           <li><a href="#" class="nav-link" data-view="cart">Cart (<span id="cart-count">0</span>)</a></li>
-          <li><a href="#" class="nav-link" data-view="login">Login</a></li>
+          <li id="login-item"><a href="#" class="nav-link" data-view="login">Login</a></li>
+          <!-- Profile link will be added dynamically -->
         </ul>
       </nav>
     </div>
@@ -64,7 +65,7 @@
         <i class="fas fa-arrow-left"></i> Back to Restaurants
       </button>
       <div class="admin-container">
-        <h2 class="section-title">Add Restaurant</h2>
+        <h2 class="section-title">Manage Restaurant</h2>
         
         <div class="form-group">
           <label for="res-name">Restaurant Name</label>
@@ -193,12 +194,40 @@
           <div class="paypal-info">
             <i class="fab fa-cc-paypal paypal-logo"></i>
             <p>You will be redirected to PayPal to complete your payment</p>
+            <p class="paypal-redirect">Click "Complete Payment" to proceed</p>
           </div>
         </div>
         
         <button class="submit-btn" onclick="processPayment()">
           <i class="fas fa-check-circle"></i> Complete Payment
         </button>
+      </div>
+    </section>
+
+    <!-- Profile View -->
+    <section id="profile-view" class="view">
+      <button class="back-button" data-view="home">
+        <i class="fas fa-arrow-left"></i> Back to Home
+      </button>
+      <div class="profile-container">
+        <h2 class="section-title">My Account</h2>
+        
+        <div class="profile-info">
+          <div class="profile-avatar">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <div class="profile-details">
+            <h3 id="profile-name">Loading...</h3>
+            <p id="profile-email"></p>
+            <p id="profile-role"></p>
+          </div>
+        </div>
+        
+        <div class="profile-actions">
+          <button class="secondary-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
       </div>
     </section>
   </main>
